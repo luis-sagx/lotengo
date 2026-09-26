@@ -6,11 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/images/placeholder.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/images/placeholder.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1e1f23"
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/placeholder.png",
@@ -32,7 +27,15 @@
           "enableFTS": false
         }
       ],
-      "expo-image"
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/placeholder.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#1e1f23"
+        }
+      ]
     ]
   }
 }
