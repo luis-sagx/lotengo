@@ -17,14 +17,15 @@ Añadir entradas originales a `src/seeds/words/b2.mjs` y `src/seeds/words/c1.mjs
 ## Plan y seguimiento
 
 - [x] T1 — Añadir vocabulario B2 en sus siete categorías; verificar conteos, unicidad y contenido. Ruta: delegada; disparador: escritura de dos archivos no triviales y preparación para la escritura. Resultado: 40 entradas reales por categoría, 280 nuevas; `npm run validate` (209/209 lecciones), `npm test` (7/7) y `git diff --check` correctos. Commit: `fa49977`.
-- [ ] T2 — Añadir vocabulario C1 en sus seis categorías; verificar contenido y recorrido completo. Ruta: delegada; disparador: escritura de dos archivos no triviales en la función completa. Commit: pendiente.
+- [x] T2 — Añadir vocabulario C1 en sus seis categorías; verificar contenido y recorrido completo. Ruta: delegada; disparador: escritura de dos archivos no triviales en la función completa. Resultado: 40 entradas reales por categoría, 240 nuevas; `npm run validate` (209/209 lecciones), `npm test` (7/7), conteos directos y `git diff --check` correctos. Commit: `50da8b9`.
 
 ## Configuración y entrega
 
 - TDD: desactivado para esta tarea; no se encontró configuración ni instrucción que lo active. Verificación ordinaria: `npm run validate` y `npm test`.
 - RDD: no disponible; `gentle-ai` no está instalado en este entorno. No se inició revisión.
-- Estrategia de entrega: `ask-on-risk` (predeterminada). Estrategia de cadena: pendiente si el tamaño acumulado supera unas 400 líneas.
+- Estrategia de entrega: `single-pr`; una sola rama y un PR cuando el usuario decida publicarlo. La opción se fijó tras pedir preferencia de cadena sin respuesta; no se creó PR.
 - Previsión: unas 520 filas nuevas más seguimiento, aproximadamente 550 líneas authored, excluyendo archivos generados.
 - Rama: `feat/useful-english-vocabulary`; límite inicial de revisión: `f1b41b9`.
-- Conteo acumulado de código authored: 286 líneas añadidas en `fa49977`.
-- Estado: T1 completo. Próximo paso: ampliar C1 y verificar de nuevo.
+- Conteo acumulado de código authored: 531 líneas añadidas (`fa49977`: 286; `50da8b9`: 245). El tamaño se debe a 520 entradas explícitas con traducción y categoría, necesarias para sustituir los términos sintéticos en las lecciones B2 y C1.
+- Límite de entrega: `f1b41b9` → `fa49977` → `50da8b9`; ambos commits pertenecerían al mismo PR. No se creó PR.
+- Estado: T1 y T2 completos. Próximo paso: entregar la rama local y decidir publicación.
