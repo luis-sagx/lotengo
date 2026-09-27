@@ -3,6 +3,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { COLORS } from '../theme/colors';
 import { FONT_FAMILY } from '../theme/typography';
+import { formatCategoryName } from '../utils/formatters';
 import WordsScreen from '../screens/WordsScreen';
 import WordsCategoryScreen from '../screens/WordsCategoryScreen';
 import StudyWordsScreen from '../screens/StudyWordsScreen';
@@ -25,13 +26,13 @@ export default function WordsNavigator() {
       <Stack.Screen
         name="WordsList"
         component={WordsScreen}
-        options={{ title: 'Palabras' }}
+        options={{ title: 'Palabras', headerShown: false }}
       />
       <Stack.Screen
         name="WordsCategory"
         component={WordsCategoryScreen}
         options={({ route }) => ({
-          title: route.params?.category || 'Categoría',
+          title: formatCategoryName(route.params?.category) || 'Categoría',
           headerBackTitle: 'Atrás',
         })}
       />

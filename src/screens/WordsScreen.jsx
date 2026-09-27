@@ -6,19 +6,19 @@ import { COLORS } from '../theme/colors';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import { useWords } from '../hooks/useWords';
-import { getCategoryImage } from '../database/wordsRepository';
 import CategoryCard from '../components/CategoryCard';
 import SearchBar from '../components/SearchBar';
 import FilterPills from '../components/FilterPills';
 import EmptyState from '../components/EmptyState';
-import { formatCategoryName, formatNumber, formatDifficulty } from '../utils/formatters';
+import ScreenHeader from '../components/ScreenHeader';
+import { formatDifficulty } from '../utils/formatters';
 import { DIFFICULTY_LEVELS } from '../utils/constants';
 
 export default function WordsScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [levelFilter, setLevelFilter] = useState('all');
   const difficulty = levelFilter === 'all' ? null : levelFilter;
-  const { categories, loading, refresh } = useWords(difficulty);
+  const { categories, loading } = useWords(difficulty);
 
   const levelOptions = [
     { label: 'Todos', value: 'all' },
@@ -33,12 +33,9 @@ export default function WordsScreen({ navigation }) {
     navigation.navigate('StudyWords', { category: null, difficulty });
   };
 
-  const handleStudyCategory = (category) => {
-    navigation.navigate('StudyWords', { category, difficulty });
-  };
-
   return (
     <View style={styles.container}>
+      <ScreenHeader title="Palabras" />
       {/* Search */}
       <View style={styles.searchContainer}>
         <SearchBar
@@ -76,7 +73,6 @@ export default function WordsScreen({ navigation }) {
           <CategoryCard
             category={item.category}
             count={item.count}
-            imageUrl={getCategoryImage(item.category)}
             onPress={() => handleCategoryPress(item.category)}
           />
         )}

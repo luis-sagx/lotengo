@@ -54,27 +54,30 @@ export function formatCategoryName(category) {
     adjectives: 'Adjetivos',
     adverbs: 'Adverbios',
     other: 'Otras',
-  };
-
-  const PHRASE_CATEGORY_NAMES = {
+    city_places: 'Ciudad y lugares',
+    environment: 'Medio ambiente',
+    hotel: 'Hotel',
+    idioms: 'Expresiones idiomáticas',
+    law_government: 'Leyes y gobierno',
+    media_entertainment: 'Medios y entretenimiento',
+    money_banking: 'Dinero y banca',
+    phrasal_verbs: 'Verbos compuestos',
+    restaurant: 'Restaurante',
+    science: 'Ciencia',
+    weather: 'Clima',
     greetings: 'Saludos',
     courtesy: 'Cortesía',
     questions: 'Preguntas',
     introductions: 'Presentaciones',
-    shopping: 'De compras',
-    restaurant: 'En el restaurante',
-    travel: 'Viajes',
     work: 'Trabajo',
-    health: 'Salud',
     directions: 'Direcciones',
     phone: 'Por teléfono',
-    emotions: 'Emociones',
     time: 'El tiempo',
-    weather: 'El clima',
-    family: 'Familia',
   };
 
-  return CATEGORY_NAMES[category] || PHRASE_CATEGORY_NAMES[category] || category;
+  return CATEGORY_NAMES[category] || String(category ?? '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/^./, character => character.toLocaleUpperCase('es'));
 }
 
 export function formatDifficulty(difficulty) {

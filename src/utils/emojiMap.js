@@ -149,23 +149,27 @@ const CATEGORY_EMOJI = {
   introductions: '🤝',
   weather: '☀️',
   directions: '🧭',
-  restaurant: '🍽️',
+  restaurant: '🍴',
   hotel: '🏨',
   money_banking: '🏦',
   city_places: '🏙️',
   chores: '🧹',
-  hobbies: '🎨',
+  hobbies: '🧩',
   media_entertainment: '🎬',
   science: '🔬',
   environment: '🌍',
   law_government: '⚖️',
-  idioms: '💬',
+  idioms: '🗣️',
   phrasal_verbs: '🔗',
   phone: '📱',
   time: '⏰',
-  work: '💼',
+  work: '🏢',
   other: '📚',
 };
+
+export function getCategoryEmoji(category) {
+  return CATEGORY_EMOJI[category] || '🏷️';
+}
 
 /**
  * Returns the best emoji for a word, falling back to its category, then a book.
@@ -180,7 +184,7 @@ export function getEmoji(word, category) {
       .replace(/[^a-z]/g, '');
     if (WORD_EMOJI[normalized]) return WORD_EMOJI[normalized];
   }
-  if (category && CATEGORY_EMOJI[category]) return CATEGORY_EMOJI[category];
+  if (category && CATEGORY_EMOJI[category]) return getCategoryEmoji(category);
   return '📚';
 }
 

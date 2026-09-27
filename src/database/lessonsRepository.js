@@ -2,6 +2,12 @@
 import { getDatabase } from './database';
 import { LEVELS, levelIndex } from '../utils/levels.mjs';
 
+const pathCache = new Map();
+
+function invalidatePath() {
+  pathCache.clear();
+}
+
 export async function persistCurriculum(plannedLessons) {
   const db = getDatabase();
   const wordRows = await db.getAllAsync('SELECT id, english_word FROM words');
@@ -54,6 +60,7 @@ export async function persistCurriculum(plannedLessons) {
     }
   });
 
+  invalidatePath();
   return created;
 }
 
@@ -63,7 +70,19 @@ export async function getLessonCount() {
   return row?.count ?? 0;
 }
 
-export async function getPath() {
+export function getPath(level) {
+  if (!LEVELS.includes(level)) return Promise.resolve([]);
+  if (pathCache.has(level)) return pathCache.get(level);
+
+  const pending = loadPath(level).catch(error => {
+    if (pathCache.get(level) === pending) pathCache.delete(level);
+    throw error;
+  });
+  pathCache.set(level, pending);
+  return pending;
+}
+
+async function loadPath(level) {
   const db = getDatabase();
   const rows = await db.getAllAsync(`
     SELECT l.id, l.level, l.unit_index, l.lesson_index, l.unit_title,
@@ -73,14 +92,9 @@ export async function getPath() {
            COALESCE(p.accuracy, 0)      AS accuracy
     FROM lessons l
     LEFT JOIN lesson_progress p ON p.lesson_id = l.id
-    ORDER BY l.level, l.unit_index, l.lesson_index
-  `);
-
-  rows.sort((a, b) =>
-    levelIndex(a.level) - levelIndex(b.level) ||
-    a.unit_index - b.unit_index ||
-    a.lesson_index - b.lesson_index
-  );
+    WHERE l.level = ?
+    ORDER BY l.unit_index, l.lesson_index
+  `, [level]);
 
   const units = [];
   let current = null;
@@ -145,7 +159,6 @@ export async function unlockUpTo(level) {
        AND lesson_id IN (SELECT id FROM lessons WHERE level NOT IN (${placeholders}))`,
     allowed
   );
-
   const current = await getCurrentLesson();
   if (!current) {
     const first = await db.getFirstAsync(
@@ -160,6 +173,7 @@ export async function unlockUpTo(level) {
       );
     }
   }
+  invalidatePath();
 }
 
 export async function completeLesson(lessonId, accuracy, stars) {
@@ -175,6 +189,7 @@ export async function completeLesson(lessonId, accuracy, stars) {
      WHERE lesson_id = ?`,
     [stars, accuracy, today, lessonId]
   );
+  invalidatePath();
 
   const all = await db.getAllAsync('SELECT id, level, unit_index, lesson_index FROM lessons');
   all.sort((a, b) =>
@@ -210,13 +225,18 @@ export async function getCurrentLesson() {
     if (current && current.status !== 'completed') return current;
   }
 
-  const units = await getPath();
-  for (const unit of units) {
-    for (const lesson of unit.lessons) {
-      if (lesson.status === 'unlocked') return lesson;
-    }
-  }
-  return null;
+  return db.getFirstAsync(`
+    SELECT l.id, l.level, l.unit_index, l.lesson_index, l.category,
+           p.status, COALESCE(p.stars, 0) AS stars,
+           COALESCE(p.accuracy, 0) AS accuracy
+    FROM lessons l
+    JOIN lesson_progress p ON p.lesson_id = l.id
+    JOIN user_config c ON c.id = 1
+    WHERE p.status = 'unlocked'
+    ORDER BY CASE WHEN l.level = c.level THEN 0 ELSE 1 END,
+             l.level, l.unit_index, l.lesson_index
+    LIMIT 1
+  `);
 }
 
 export async function getFirstLessonForLevel(level) {

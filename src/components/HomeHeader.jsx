@@ -5,6 +5,7 @@ import { COLORS } from '../theme/colors';
 import { SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import StreakBadge from './StreakBadge';
+import ScreenHeader from './ScreenHeader';
 import ProgressBar from './ProgressBar';
 import StatsCard from './StatsCard';
 import { formatNumber } from '../utils/formatters';
@@ -13,13 +14,11 @@ import { getCurrentMonthYear } from '../utils/dateUtils';
 export default function HomeHeader({ streak, todayStudied, goal, knownCount }) {
   return (
     <>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>¡Hola! 👋</Text>
-          <Text style={styles.date}>{getCurrentMonthYear()}</Text>
-        </View>
-        <StreakBadge days={streak} />
-      </View>
+      <ScreenHeader
+        title="¡Hola! 👋"
+        subtitle={getCurrentMonthYear()}
+        trailing={<StreakBadge days={streak} />}
+      />
 
       <View style={styles.goalCard}>
         <View style={styles.goalHeader}>
@@ -39,25 +38,6 @@ export default function HomeHeader({ streak, todayStudied, goal, knownCount }) {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.xl,
-    paddingTop: SPACING.xxl,
-    paddingBottom: SPACING.base,
-  },
-  greeting: {
-    fontFamily: FONT_FAMILY.bold,
-    fontSize: 24,
-    color: COLORS.deepOlive,
-  },
-  date: {
-    fontFamily: FONT_FAMILY.regular,
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
   goalCard: {
     marginHorizontal: SPACING.xl,
     backgroundColor: COLORS.surfaceWhite,

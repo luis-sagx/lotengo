@@ -13,6 +13,7 @@ import { formatDateShort, formatRelative } from '../utils/dateUtils';
 import StatsCard from '../components/StatsCard';
 import AchievementBadge from '../components/AchievementBadge';
 import ProgressBar from '../components/ProgressBar';
+import ScreenHeader from '../components/ScreenHeader';
 
 const { width } = Dimensions.get('window');
 
@@ -54,11 +55,10 @@ export default function ProgressScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Summary */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Progreso</Text>
-        <Text style={styles.streakText}>🔥 {formatStreak(streak)} de racha</Text>
-      </View>
+      <ScreenHeader
+        title="Progreso"
+        trailing={<Text style={styles.streakText}>🔥 {formatStreak(streak)}{streak > 0 ? ' de racha' : ''}</Text>}
+      />
 
       {/* Stats row */}
       <View style={styles.statsRow}>
@@ -175,19 +175,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.warmParchment,
-  },
-  header: {
-    paddingHorizontal: SPACING.xl,
-    paddingTop: SPACING.xl,
-    paddingBottom: SPACING.base,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontFamily: FONT_FAMILY.bold,
-    fontSize: 24,
-    color: COLORS.deepOlive,
   },
   streakText: {
     fontFamily: FONT_FAMILY.semiBold,

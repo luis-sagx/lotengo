@@ -6,7 +6,6 @@ import { COLORS } from '../theme/colors';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import { useCategoryPhrases } from '../hooks/usePhrases';
-import { formatCategoryName } from '../utils/formatters';
 import EmptyState from '../components/EmptyState';
 
 export default function PhrasesCategoryScreen({ route, navigation }) {
@@ -19,9 +18,7 @@ export default function PhrasesCategoryScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>{formatCategoryName(category)}</Text>
         <Text style={styles.count}>{phrases.length} frases</Text>
       </View>
 
@@ -73,11 +70,6 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderSage,
-  },
-  title: {
-    fontFamily: FONT_FAMILY.bold,
-    fontSize: 22,
-    color: COLORS.deepOlive,
   },
   count: {
     fontFamily: FONT_FAMILY.regular,
