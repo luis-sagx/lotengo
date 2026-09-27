@@ -1,9 +1,9 @@
 // saflash — Filter pills (horizontal scrollable)
-import React from 'react';
-import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { COLORS } from '../theme/colors';
-import { RADIUS, SPACING } from '../theme/spacing';
-import { FONT_FAMILY } from '../theme/typography';
+import React from "react";
+import { ScrollView, TouchableOpacity, Text, StyleSheet } from "react-native";
+import { COLORS } from "../theme/colors";
+import { RADIUS, SPACING } from "../theme/spacing";
+import { FONT_FAMILY } from "../theme/typography";
 
 export default function FilterPills({ options, selected, onSelect, style }) {
   return (
@@ -21,7 +21,9 @@ export default function FilterPills({ options, selected, onSelect, style }) {
             style={[
               styles.pill,
               {
-                backgroundColor: isSelected ? COLORS.deepOlive : COLORS.sageCream,
+                backgroundColor: isSelected
+                  ? COLORS.deepOlive
+                  : COLORS.sageCream,
                 borderColor: isSelected ? COLORS.deepOlive : COLORS.borderSage,
               },
             ]}
@@ -31,7 +33,11 @@ export default function FilterPills({ options, selected, onSelect, style }) {
             <Text
               style={[
                 styles.label,
-                { color: isSelected ? COLORS.surfaceWhite : COLORS.textSecondary },
+                {
+                  color: isSelected
+                    ? COLORS.surfaceWhite
+                    : COLORS.textSecondary,
+                },
               ]}
             >
               {option.label}
@@ -45,18 +51,18 @@ export default function FilterPills({ options, selected, onSelect, style }) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 52,
+    height: 40,
   },
   content: {
     paddingHorizontal: SPACING.base,
     paddingVertical: SPACING.xs,
     gap: SPACING.sm,
-    alignItems: 'center',
+    alignItems: "center",
   },
   pill: {
-    minHeight: 44,
+    minHeight: 30,
     paddingHorizontal: SPACING.md,
-    justifyContent: 'center',
+    justifyContent: "center",
     borderRadius: RADIUS.pill,
     borderWidth: 1,
   },
