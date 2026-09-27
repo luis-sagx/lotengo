@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     paddingHorizontal: SPACING.xl,
-    paddingTop: SPACING.xxl,
+    paddingTop: SPACING.xxxl,
     paddingBottom: SPACING.base,
     minHeight: 102,
     gap: SPACING.sm,
