@@ -51,7 +51,7 @@ export default function FilterPills({ options, selected, onSelect, style }) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 40,
+    height: 44,
   },
   content: {
     paddingHorizontal: SPACING.base,
