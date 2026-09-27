@@ -1,5 +1,6 @@
 // saflash — Settings hook
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   getConfig,
   updateConfig,
@@ -32,9 +33,9 @@ export function useSettings() {
     }
   }, [setStoreDailyGoal, setStoreNotifications]);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     loadConfig();
-  }, [loadConfig]);
+  }, [loadConfig]));
 
   const updateDailyGoal = useCallback(async (goal) => {
     try {

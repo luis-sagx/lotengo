@@ -56,7 +56,7 @@ export default function SettingsScreen({ navigation }) {
         <Text style={styles.sectionTitle}>Mi nivel</Text>
         <TouchableOpacity
           style={styles.settingRow}
-          onPress={() => navigation.getParent()?.getParent()?.navigate('LevelPick', { mode: 'change' })}
+          onPress={() => navigation.getParent()?.navigate('LevelPick', { mode: 'change' })}
         >
           <View style={styles.settingInfo}>
             <Ionicons name="school" size={22} color={COLORS.oliveInk} />

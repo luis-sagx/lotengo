@@ -17,8 +17,8 @@ Corregir la selección y presentación de nivel, consulta y refresco de ruta, na
 
 ## Plan y seguimiento
 
-- [x] T1 — Filtrar/paginar la ruta por nivel y evitar recargas redundantes, con actualización tras cambios de nivel o lección. Ruta: delegada; disparadores: exploración de más de cuatro archivos y escritura de varios archivos no triviales. Resultado: consulta SQL y caché por nivel, invalidación al desbloquear/completar/crear lecciones, una página de nivel en la UI y refresco sin spinner al volver. Comprobación: inspección de llamadas `getPath`, flujo de selección/finalización y `git diff --check` correcto; dispositivo pendiente. Commit: pendiente.
-- [ ] T2 — Reparar navegación desde Configuración y actualización del nivel visible. Ruta: delegada; disparadores: preparación y edición de varios archivos vinculados. Comprobación: inspección del árbol de navegación y estado al volver. Commit: pendiente.
+- [x] T1 — Filtrar/paginar la ruta por nivel y evitar recargas redundantes, con actualización tras cambios de nivel o lección. Ruta: delegada; disparadores: exploración de más de cuatro archivos y escritura de varios archivos no triviales. Resultado: consulta SQL y caché por nivel, invalidación al desbloquear/completar/crear lecciones, una página de nivel en la UI y refresco sin spinner al volver. Comprobación: inspección de llamadas `getPath`, flujo de selección/finalización y `git diff --check` correcto; dispositivo pendiente. Commit: `6e5094c`.
+- [x] T2 — Reparar navegación desde Configuración y actualización del nivel visible. Ruta: delegada; disparadores: preparación y edición de varios archivos vinculados. Resultado: enlace correcto al navegador raíz y carga de configuración al recuperar el foco. Comprobación: árbol AppNavigator/MainTabNavigator/LevelPick inspeccionado y `git diff --check` correcto; dispositivo pendiente. Commit: pendiente.
 - [ ] T3 — Normalizar nombres de categorías, iconos y altura de filtros en Palabras y Frases. Ruta: delegada; disparadores: preparación y edición de varios archivos no triviales. Comprobación: recorrer categorías reales y revisar estilos de filtros. Commit: pendiente.
 
 ## Configuración y entrega
@@ -28,4 +28,4 @@ Corregir la selección y presentación de nivel, consulta y refresco de ruta, na
 - Estrategia de entrega: `ask-on-risk` (predeterminada). Previsión de código authored: aproximadamente 250–350 líneas, excluyendo seguimiento.
 - Rama: `fix/level-path-and-categories`; punto de partida: `8e156b8`.
 - Espejo Engram: pendiente; no hay herramientas de memoria disponibles en esta sesión.
-- Progreso: T1 implementada y comprobada estáticamente. Siguiente paso: registrar commit de T1 y abordar T2.
+- Progreso: T1 y T2 implementadas y comprobadas estáticamente. Siguiente paso: registrar commit de T2 y abordar T3.
