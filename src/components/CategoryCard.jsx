@@ -5,8 +5,9 @@ import { COLORS } from '../theme/colors';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import { formatCategoryName, formatNumber } from '../utils/formatters';
+import { getCategoryEmoji } from '../utils/emojiMap';
 
-export default function CategoryCard({ category, count, imageUrl, progress = 0, onPress }) {
+export default function CategoryCard({ category, count, itemLabel = 'palabras', progress = 0, onPress }) {
   return (
     <TouchableOpacity
       style={styles.card}
@@ -14,21 +15,15 @@ export default function CategoryCard({ category, count, imageUrl, progress = 0, 
       activeOpacity={0.8}
     >
       <View style={styles.imageContainer}>
-        {imageUrl ? (
-          <View style={[styles.imagePlaceholder, { backgroundColor: COLORS.sageCream }]}>
-            <Text style={styles.emoji}>{getCategoryEmoji(category)}</Text>
-          </View>
-        ) : (
-          <View style={[styles.imagePlaceholder, { backgroundColor: COLORS.sageCream }]}>
-            <Text style={styles.emoji}>{getCategoryEmoji(category)}</Text>
-          </View>
-        )}
+        <View style={styles.imagePlaceholder}>
+          <Text style={styles.emoji}>{getCategoryEmoji(category)}</Text>
+        </View>
       </View>
       <View style={styles.info}>
-        <Text style={styles.name} numberOfLines={1}>
+        <Text style={styles.name} numberOfLines={3}>
           {formatCategoryName(category)}
         </Text>
-        <Text style={styles.count}>{formatNumber(count)} palabras</Text>
+        <Text style={styles.count}>{formatNumber(count)} {itemLabel}</Text>
         {progress > 0 && (
           <View style={styles.progressTrack}>
             <View style={[styles.progressFill, { width: `${Math.min(progress, 100)}%` }]} />
@@ -37,19 +32,6 @@ export default function CategoryCard({ category, count, imageUrl, progress = 0, 
       </View>
     </TouchableOpacity>
   );
-}
-
-function getCategoryEmoji(category) {
-  const emojis = {
-    basics: '📖', verbs_common: '🏃', verbs_action: '💪', family: '👨‍👩‍👧‍👦',
-    body: '🦵', health: '🏥', food_drink: '🍎', clothing: '👕',
-    home: '🏠', nature: '🌿', animals: '🐾', colors_shapes: '🎨',
-    numbers_time: '🔢', emotions: '😊', work_business: '💼', technology: '💻',
-    transport: '🚗', education: '📚', sports: '⚽', arts_culture: '🎭',
-    shopping: '🛒', travel: '✈️', social: '🤝', adjectives: '✨',
-    adverbs: '⚡', other: '📝',
-  };
-  return emojis[category] || '📖';
 }
 
 const styles = StyleSheet.create({
@@ -70,6 +52,7 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     width: '100%',
     height: '100%',
+    backgroundColor: COLORS.sageCream,
     justifyContent: 'center',
     alignItems: 'center',
   },

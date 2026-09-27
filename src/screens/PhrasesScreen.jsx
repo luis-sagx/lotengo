@@ -6,11 +6,10 @@ import { COLORS } from '../theme/colors';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import { usePhrases } from '../hooks/usePhrases';
-import { PHRASE_CATEGORY_HEADERS } from '../database/phrasesRepository';
 import CategoryCard from '../components/CategoryCard';
 import FilterPills from '../components/FilterPills';
 import EmptyState from '../components/EmptyState';
-import { formatCategoryName, formatNumber, formatDifficulty } from '../utils/formatters';
+import { formatDifficulty } from '../utils/formatters';
 import { DIFFICULTY_LEVELS } from '../utils/constants';
 
 export default function PhrasesScreen({ navigation }) {
@@ -67,7 +66,7 @@ export default function PhrasesScreen({ navigation }) {
           <CategoryCard
             category={item.category}
             count={item.count}
-            imageUrl={PHRASE_CATEGORY_HEADERS[item.category]}
+            itemLabel="frases"
             onPress={() => handleCategoryPress(item.category)}
           />
         )}

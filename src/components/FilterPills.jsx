@@ -45,21 +45,25 @@ export default function FilterPills({ options, selected, onSelect, style }) {
 
 const styles = StyleSheet.create({
   container: {
-    maxHeight: 44,
+    height: 52,
   },
   content: {
     paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.xs,
     gap: SPACING.sm,
     alignItems: 'center',
   },
   pill: {
+    minHeight: 44,
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs + 2,
+    justifyContent: 'center',
     borderRadius: RADIUS.pill,
     borderWidth: 1,
   },
   label: {
     fontFamily: FONT_FAMILY.medium,
     fontSize: 13,
+    lineHeight: 20,
+    includeFontPadding: true,
   },
 });
