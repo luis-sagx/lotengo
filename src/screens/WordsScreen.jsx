@@ -10,6 +10,7 @@ import CategoryCard from '../components/CategoryCard';
 import SearchBar from '../components/SearchBar';
 import FilterPills from '../components/FilterPills';
 import EmptyState from '../components/EmptyState';
+import ScreenHeader from '../components/ScreenHeader';
 import { formatDifficulty } from '../utils/formatters';
 import { DIFFICULTY_LEVELS } from '../utils/constants';
 
@@ -34,6 +35,7 @@ export default function WordsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <ScreenHeader title="Palabras" />
       {/* Search */}
       <View style={styles.searchContainer}>
         <SearchBar

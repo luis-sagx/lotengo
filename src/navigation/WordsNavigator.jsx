@@ -25,7 +25,7 @@ export default function WordsNavigator() {
       <Stack.Screen
         name="WordsList"
         component={WordsScreen}
-        options={{ title: 'Palabras' }}
+        options={{ title: 'Palabras', headerShown: false }}
       />
       <Stack.Screen
         name="WordsCategory"

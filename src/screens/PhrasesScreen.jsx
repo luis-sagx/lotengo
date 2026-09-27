@@ -9,6 +9,7 @@ import { usePhrases } from '../hooks/usePhrases';
 import CategoryCard from '../components/CategoryCard';
 import FilterPills from '../components/FilterPills';
 import EmptyState from '../components/EmptyState';
+import ScreenHeader from '../components/ScreenHeader';
 import { formatDifficulty } from '../utils/formatters';
 import { DIFFICULTY_LEVELS } from '../utils/constants';
 
@@ -32,11 +33,7 @@ export default function PhrasesScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Frases</Text>
-        <Text style={styles.subtitle}>Frases listas para conversaciones reales</Text>
-      </View>
+      <ScreenHeader title="Frases" subtitle="Frases listas para conversaciones reales" />
 
       {/* Level filter */}
       <FilterPills
@@ -85,22 +82,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.warmParchment,
-  },
-  header: {
-    paddingHorizontal: SPACING.xl,
-    paddingTop: SPACING.base,
-    paddingBottom: SPACING.md,
-  },
-  title: {
-    fontFamily: FONT_FAMILY.bold,
-    fontSize: 22,
-    color: COLORS.deepOlive,
-  },
-  subtitle: {
-    fontFamily: FONT_FAMILY.regular,
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginTop: 4,
   },
   filters: {
     marginBottom: SPACING.sm,

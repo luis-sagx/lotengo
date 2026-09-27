@@ -7,6 +7,7 @@ import { RADIUS, SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import { useSettings } from '../hooks/useSettings';
 import { DAILY_GOAL_OPTIONS, LEVEL_LABELS } from '../utils/constants';
+import ScreenHeader from '../components/ScreenHeader';
 
 export default function SettingsScreen({ navigation }) {
   const {
@@ -48,9 +49,7 @@ export default function SettingsScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Ajustes</Text>
-      </View>
+      <ScreenHeader title="Ajustes" />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Mi nivel</Text>
@@ -194,16 +193,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.warmParchment,
-  },
-  header: {
-    paddingHorizontal: SPACING.xl,
-    paddingTop: SPACING.xl,
-    paddingBottom: SPACING.base,
-  },
-  title: {
-    fontFamily: FONT_FAMILY.bold,
-    fontSize: 24,
-    color: COLORS.deepOlive,
   },
   section: {
     paddingHorizontal: SPACING.xl,

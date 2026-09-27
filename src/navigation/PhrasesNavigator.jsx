@@ -25,7 +25,7 @@ export default function PhrasesNavigator() {
       <Stack.Screen
         name="PhrasesList"
         component={PhrasesScreen}
-        options={{ title: 'Frases' }}
+        options={{ title: 'Frases', headerShown: false }}
       />
       <Stack.Screen
         name="PhrasesCategory"
