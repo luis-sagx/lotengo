@@ -7,7 +7,6 @@ import { RADIUS, SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import { useCategoryWords } from '../hooks/useWords';
 import { getCategoryImage } from '../database/wordsRepository';
-import { formatCategoryName } from '../utils/formatters';
 import EmptyState from '../components/EmptyState';
 
 export default function WordsCategoryScreen({ route, navigation }) {
@@ -20,9 +19,7 @@ export default function WordsCategoryScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>{formatCategoryName(category)}</Text>
         <Text style={styles.count}>{words.length} palabras</Text>
       </View>
 
@@ -77,11 +74,6 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderSage,
-  },
-  title: {
-    fontFamily: FONT_FAMILY.bold,
-    fontSize: 22,
-    color: COLORS.deepOlive,
   },
   count: {
     fontFamily: FONT_FAMILY.regular,

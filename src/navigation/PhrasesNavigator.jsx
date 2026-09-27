@@ -3,6 +3,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { COLORS } from '../theme/colors';
 import { FONT_FAMILY } from '../theme/typography';
+import { formatCategoryName } from '../utils/formatters';
 import PhrasesScreen from '../screens/PhrasesScreen';
 import PhrasesCategoryScreen from '../screens/PhrasesCategoryScreen';
 import StudyPhrasesScreen from '../screens/StudyPhrasesScreen';
@@ -31,7 +32,7 @@ export default function PhrasesNavigator() {
         name="PhrasesCategory"
         component={PhrasesCategoryScreen}
         options={({ route }) => ({
-          title: route.params?.category || 'Categoría',
+          title: formatCategoryName(route.params?.category) || 'Categoría',
           headerBackTitle: 'Atrás',
         })}
       />
