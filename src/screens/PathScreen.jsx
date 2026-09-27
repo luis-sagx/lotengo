@@ -1,5 +1,5 @@
 // saflash — Guided lesson path.
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,10 +16,12 @@ import LoadingCard from '../components/LoadingCard';
 import { LEVEL_LABELS, LEVEL_SELF_DESCRIPTIONS } from '../utils/constants';
 import { getFirstLessonForLevel, unlockUpTo } from '../database/lessonsRepository';
 import { setCurrentLesson, setLevel, setPlacementDone } from '../database/sessionRepository';
+import { LEVELS } from '../utils/levels.mjs';
 
 export default function PathScreen({ navigation }) {
   const progress = useProgress();
-  const { units, currentLesson, config, loading, error, refresh } = useLessonPath();
+  const { units, unitsLevel, currentLesson, config, visibleLevel, loading, error, refresh, showLevel } = useLessonPath();
+  const scrollRef = useRef(null);
   const setStoreLevel = useAppStore(s => s.setLevel);
   const goal = useAppStore(s => s.dailyGoal) || progress.dailyGoal || 20;
 
@@ -29,6 +31,10 @@ export default function PathScreen({ navigation }) {
       progress.refresh();
     }, [refresh, progress.refresh])
   );
+
+  useEffect(() => {
+    if (visibleLevel) scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [visibleLevel]);
 
   const chooseLevel = async (level) => {
     await setLevel(level);
@@ -47,10 +53,12 @@ export default function PathScreen({ navigation }) {
   };
 
   const needsLevel = config && config.placement_done !== 1;
+  const levelPosition = LEVELS.indexOf(visibleLevel);
+  const pageLoading = loading || (!error && visibleLevel && unitsLevel !== visibleLevel);
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <HomeHeader
           streak={progress.streak}
           todayStudied={progress.todayStudied}
@@ -74,13 +82,35 @@ export default function PathScreen({ navigation }) {
 
         <View style={styles.pathHeader}>
           <Text style={styles.pathTitle}>Ruta de niveles</Text>
-          <Text style={styles.pathSubtitle}>{config?.level || 'A1'} · {LEVEL_LABELS[config?.level || 'A1']}</Text>
+          <Text style={styles.pathSubtitle}>{visibleLevel || config?.level || 'A1'} · {LEVEL_LABELS[visibleLevel || config?.level || 'A1']}</Text>
         </View>
 
-        {loading && <LoadingCard />}
+        {levelPosition >= 0 && (
+          <View style={styles.pageControls}>
+            <TouchableOpacity
+              style={[styles.pageButton, levelPosition === 0 && styles.pageButtonDisabled]}
+              disabled={levelPosition === 0}
+              accessibilityLabel="Nivel anterior"
+              onPress={() => showLevel(LEVELS[levelPosition - 1])}
+            >
+              <Ionicons name="chevron-back" size={22} color={COLORS.deepOlive} />
+            </TouchableOpacity>
+            <Text style={styles.pageLabel}>Nivel {levelPosition + 1} de {LEVELS.length}</Text>
+            <TouchableOpacity
+              style={[styles.pageButton, levelPosition === LEVELS.length - 1 && styles.pageButtonDisabled]}
+              disabled={levelPosition === LEVELS.length - 1}
+              accessibilityLabel="Nivel siguiente"
+              onPress={() => showLevel(LEVELS[levelPosition + 1])}
+            >
+              <Ionicons name="chevron-forward" size={22} color={COLORS.deepOlive} />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {pageLoading && <LoadingCard />}
         {error && <Text style={styles.error}>{error}</Text>}
 
-        {!loading && units.map(unit => (
+        {!pageLoading && !error && units.map(unit => (
           <View key={`${unit.level}-${unit.unit_index}`} style={styles.unit}>
             <UnitHeader unit={unit} />
             {unit.lessons.map((lesson, index) => (
@@ -172,6 +202,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     marginTop: 2,
+  },
+  pageControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: SPACING.xl,
+    marginTop: SPACING.base,
+    marginBottom: SPACING.md,
+  },
+  pageButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.surfaceWhite,
+    borderRadius: RADIUS.md,
+    borderWidth: 1,
+    borderColor: COLORS.borderSage,
+  },
+  pageButtonDisabled: {
+    opacity: 0.4,
+  },
+  pageLabel: {
+    fontFamily: FONT_FAMILY.semiBold,
+    fontSize: 14,
+    color: COLORS.textSecondary,
   },
   unit: {
     paddingHorizontal: SPACING.xl,
