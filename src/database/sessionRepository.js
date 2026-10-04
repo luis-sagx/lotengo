@@ -1,16 +1,15 @@
 // saflash — Sessions + config repository
 import { getDatabase } from './database';
-import { localDate, nextStreak, refillHearts, changeHearts } from '../services/gamification.mjs';
+import { localDate, nextStreak } from '../services/streak.mjs';
 
 // ── Study Sessions ──────────────────────────
 
 export async function saveSession(session) {
   const db = getDatabase();
-  const xp = session.xp || 0;
   await db.runAsync(
     `INSERT INTO study_sessions
-      (session_date, session_type, cards_studied, cards_correct, cards_medium, cards_hard, duration_secs, xp)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      (session_date, session_type, cards_studied, cards_correct, cards_medium, cards_hard, duration_secs)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       localDate(),
       session.session_type,
@@ -19,21 +18,8 @@ export async function saveSession(session) {
       session.cards_medium,
       session.cards_hard,
       session.duration_secs,
-      xp,
     ]
   );
-  if (xp) {
-    await db.runAsync('UPDATE user_config SET xp_total = COALESCE(xp_total, 0) + ? WHERE id = 1', [xp]);
-  }
-}
-
-export async function getTodayXp() {
-  const db = getDatabase();
-  const row = await db.getFirstAsync(
-    'SELECT COALESCE(SUM(xp), 0) AS xp FROM study_sessions WHERE session_date = ?',
-    [localDate()]
-  );
-  return row?.xp || 0;
 }
 
 export async function getSessions(limit = 30) {
@@ -87,23 +73,13 @@ export async function setOnboardingDone() {
 export async function updateStreak() {
   const config = await getConfig();
   const today = localDate();
-  const streak = nextStreak(config.last_study_date, today, config.streak_days);
-  await updateConfig({ streak_days: streak, last_study_date: today });
+  const { streak, freezeAt } = nextStreak({
+    lastDate: config.last_study_date,
+    streak: config.streak_days,
+    freezeAt: config.streak_freeze_at,
+  }, today);
+  await updateConfig({ streak_days: streak, last_study_date: today, streak_freeze_at: freezeAt });
   return streak;
-}
-
-// ── Hearts ──────────────────────────────────
-
-export async function getHearts() {
-  const config = await getConfig();
-  return refillHearts({ hearts: config?.hearts, updatedAt: config?.hearts_updated_at });
-}
-
-export async function addHearts(delta) {
-  const config = await getConfig();
-  const next = changeHearts({ hearts: config?.hearts, updatedAt: config?.hearts_updated_at }, delta);
-  await updateConfig({ hearts: next.hearts, hearts_updated_at: next.updatedAt });
-  return next;
 }
 
 export async function incrementTotalStudied(count) {
@@ -111,10 +87,6 @@ export async function incrementTotalStudied(count) {
     'UPDATE user_config SET total_studied = COALESCE(total_studied, 0) + ? WHERE id = 1',
     [count]
   );
-}
-
-export async function updateDailyGoal(goal) {
-  await updateConfig({ daily_goal: goal });
 }
 
 export async function toggleNotifications(enabled) {

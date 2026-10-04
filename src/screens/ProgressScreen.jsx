@@ -22,7 +22,7 @@ export default function ProgressScreen() {
   const {
     study,
     streak,
-    xpTotal,
+    totalStudied,
     totalWords,
     totalPhrases,
     achievements,
@@ -62,7 +62,7 @@ export default function ProgressScreen() {
 
         {/* Stats row */}
         <View style={styles.statsRow}>
-          <StatsCard icon="flash" value={formatNumber(xpTotal)} label="XP total" color={COLORS.accentOrange} />
+          <StatsCard icon="repeat" value={formatNumber(totalStudied)} label="Respuestas" color={COLORS.accentOrange} />
           <StatsCard icon="checkmark-done" value={formatNumber(study.knownCount)} label="Dominadas" color={COLORS.successGreen} />
           <StatsCard icon="flame" value={`${streak}`} label="Días" color={COLORS.goldText} />
         </View>

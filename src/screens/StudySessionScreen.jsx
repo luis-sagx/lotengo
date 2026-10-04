@@ -21,10 +21,9 @@ export default function StudySessionScreen({ navigation, route }) {
   if (session.completed) {
     return (
       <SessionSummary
+        title={session.practice ? '¡Práctica terminada!' : '¡Sesión de hoy completada!'}
         correct={session.completed.correct}
         wrong={session.completed.wrong}
-        xp={session.completed.xp}
-        heartGained
         durationSecs={session.completed.durationSecs}
         onContinue={() => navigation.goBack()}
       />

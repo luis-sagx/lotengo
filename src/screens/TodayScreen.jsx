@@ -10,7 +10,7 @@ import ScreenHeader from '../components/ScreenHeader';
 import StatusBarScrim from '../components/StatusBarScrim';
 import { loadToday } from '../hooks/useStudySession';
 import { getTotalDueCount, getStudyStats } from '../database/progressRepository';
-import { endOfLocalDay } from '../services/gamification.mjs';
+import { endOfLocalDay } from '../services/streak.mjs';
 
 // Rough pace: a review takes ~10 s, a new word ~30 s.
 function estimateMinutes(due, fresh) {

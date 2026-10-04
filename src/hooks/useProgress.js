@@ -1,7 +1,7 @@
 // saflash — Progress/stats hook
 import { useState, useCallback } from 'react';
 import { getStudyStats, getAchievementStats } from '../database/progressRepository';
-import { getConfig, getWeekStats, getTodayXp, getHearts } from '../database/sessionRepository';
+import { getConfig, getWeekStats } from '../database/sessionRepository';
 import { getTotalWordsCount } from '../database/wordsRepository';
 import { getTotalPhrasesCount } from '../database/phrasesRepository';
 import { checkAchievements } from '../utils/formatters';
@@ -10,12 +10,8 @@ import useAppStore from '../store/appStore';
 export function useProgress() {
   const [stats, setStats] = useState({
     study: { newCount: 0, learningCount: 0, reviewingCount: 0, knownCount: 0 },
-    todayXp: 0,
-    xpTotal: 0,
-    hearts: null,
     streak: 0,
     totalStudied: 0,
-    dailyGoal: 20,
     totalWords: 5000,
     totalPhrases: 500,
     weekData: [],
@@ -30,18 +26,14 @@ export function useProgress() {
     try {
       const [
         studyStats,
-        todayXp,
         config,
-        hearts,
         weekData,
         totalWords,
         totalPhrases,
         achievementStats,
       ] = await Promise.all([
         getStudyStats(),
-        getTodayXp(),
         getConfig(),
-        getHearts(),
         getWeekStats(),
         getTotalWordsCount(),
         getTotalPhrasesCount(),
@@ -52,7 +44,6 @@ export function useProgress() {
         ...achievementStats,
         streak: config?.streak_days || 0,
         totalStudied: config?.total_studied || 0,
-        xpTotal: config?.xp_total || 0,
       };
 
       setStreakDays(currentStats.streak);
@@ -60,12 +51,8 @@ export function useProgress() {
 
       setStats({
         study: studyStats,
-        todayXp,
-        xpTotal: config?.xp_total || 0,
-        hearts,
         streak: currentStats.streak,
         totalStudied: currentStats.totalStudied,
-        dailyGoal: config?.daily_goal || 20,
         totalWords: totalWords || 5000,
         totalPhrases: totalPhrases || 500,
         weekData: weekData || [],

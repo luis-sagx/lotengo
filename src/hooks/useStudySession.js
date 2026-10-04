@@ -5,9 +5,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   answerCard, getDueCards, getPracticeCards, getNewCards, getNewCardsSince, getDistractorCards,
 } from '../database/progressRepository';
-import { saveSession, incrementTotalStudied, updateStreak, addHearts, getConfig } from '../database/sessionRepository';
+import { saveSession, incrementTotalStudied, updateStreak, getConfig } from '../database/sessionRepository';
 import { GRADE, previewIntervals, suggestGrade } from '../services/srs.mjs';
-import { xpForSession, endOfLocalDay, startOfLocalDay } from '../services/gamification.mjs';
+import { endOfLocalDay, startOfLocalDay } from '../services/streak.mjs';
 import { EXERCISE, toCard, makeExercise, exerciseFor, gradeAnswer, pickNew, planDaily } from '../services/quiz.mjs';
 
 // Learning steps due within this window come back in the same session.
@@ -78,7 +78,6 @@ export function useStudySession({ practice: practiceOnly = false } = {}) {
     const all = results.current;
     const wrong = all.filter(g => g === GRADE.AGAIN).length;
     const correct = all.length - wrong;
-    const xp = xpForSession({ correct, total: all.length, review: true });
     const durationSecs = Math.floor((Date.now() - sessionStart.current) / 1000);
     await Promise.all([
       saveSession({
@@ -88,13 +87,11 @@ export function useStudySession({ practice: practiceOnly = false } = {}) {
         cards_medium: all.filter(g => g === GRADE.HARD).length,
         cards_hard: wrong,
         duration_secs: durationSecs,
-        xp,
       }),
       incrementTotalStudied(all.length),
       updateStreak(),
-      addHearts(1), // finishing a review earns a heart back
     ]);
-    setCompleted({ correct, wrong, xp, durationSecs });
+    setCompleted({ correct, wrong, durationSecs });
   }, []);
 
   const advance = useCallback(async (queue) => {

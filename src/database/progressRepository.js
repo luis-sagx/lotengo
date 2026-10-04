@@ -1,6 +1,7 @@
 // saflash — User progress repository (FSRS card state + review log)
 import { getDatabase } from './database';
 import { review, MATURE_DAYS } from '../services/srs.mjs';
+import { restoreLessonProgress } from './lessonsRepository';
 
 export async function getProgress(cardType, cardId) {
   const db = getDatabase();
@@ -213,4 +214,20 @@ export async function getAchievementStats() {
     knownPhrases: row?.known_phrases || 0,
     perfectSession: row?.perfect === 1,
   };
+}
+
+// Forgets every answer, session and streak; settings and level stay.
+export async function resetAllProgress() {
+  const db = getDatabase();
+  await db.withTransactionAsync(async () => {
+    await db.execAsync(`
+      DELETE FROM user_progress;
+      DELETE FROM review_log;
+      DELETE FROM study_sessions;
+      UPDATE lesson_progress SET status = 'locked', stars = 0, accuracy = 0, completed_at = NULL;
+      UPDATE user_config SET streak_days = 0, last_study_date = NULL, streak_freeze_at = NULL,
+        total_studied = 0 WHERE id = 1;
+    `);
+  });
+  await restoreLessonProgress();
 }

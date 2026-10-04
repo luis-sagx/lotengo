@@ -9,9 +9,6 @@ const useAppStore = create((set) => ({
   setLevel: (level) => set({ level }),
 
   // ── Config cache ──────────────────────────
-  dailyGoal: 20,
-  setDailyGoal: (goal) => set({ dailyGoal: goal }),
-
   notifications: true,
   setNotifications: (enabled) => set({ notifications: enabled }),
 
@@ -22,9 +19,6 @@ const useAppStore = create((set) => ({
 
   totalStudied: 0,
   setTotalStudied: (total) => set({ totalStudied: total }),
-
-  todayCards: 0,
-  setTodayCards: (count) => set({ todayCards: count }),
 }));
 
 export default useAppStore;

@@ -1,7 +1,7 @@
 // saflash — Lessons repository: the guided path's persistence layer.
 import { getDatabase } from './database';
 import { LEVELS, levelIndex } from '../utils/levels.mjs';
-import { localDate } from '../services/gamification.mjs';
+import { localDate } from '../services/streak.mjs';
 
 const pathCache = new Map();
 const BATCH = 100;

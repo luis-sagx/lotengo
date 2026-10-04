@@ -4,7 +4,7 @@ import './support/register.mjs';
 
 const { initDatabase, getDatabase, markSeeded } = await import('../src/database/database.js');
 const { runSeeds } = await import('../src/seeds/seedRunner.js');
-const { answerCard, getDueCards } = await import('../src/database/progressRepository.js');
+const { answerCard, getDueCards, resetAllProgress } = await import('../src/database/progressRepository.js');
 const { GRADE } = await import('../src/services/srs.mjs');
 
 test('a content rebuild keeps progress and review history on the same cards', async () => {
@@ -43,4 +43,14 @@ test('a content rebuild keeps progress and review history on the same cards', as
   assert.equal(due[0].en, 'have');
   assert.equal(due[0].id, moved.id);
   await markSeeded();
+});
+
+test('resetting progress forgets answers and history but keeps the content', async () => {
+  const db = getDatabase();
+  await resetAllProgress();
+  for (const table of ['user_progress', 'review_log', 'study_sessions']) {
+    assert.equal((await db.getFirstAsync(`SELECT COUNT(*) AS n FROM ${table}`)).n, 0, table);
+  }
+  assert.ok((await db.getFirstAsync('SELECT COUNT(*) AS n FROM words')).n > 1000);
+  assert.equal((await db.getFirstAsync("SELECT COUNT(*) AS n FROM lesson_progress WHERE status = 'completed'")).n, 0);
 });

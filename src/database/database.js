@@ -169,7 +169,6 @@ export async function initDatabase() {
       cards_medium    INTEGER DEFAULT 0,
       cards_hard      INTEGER DEFAULT 0,
       duration_secs   INTEGER DEFAULT 0,
-      xp              INTEGER DEFAULT 0,
       created_at      TEXT    DEFAULT (datetime('now'))
     );
   `);
@@ -179,7 +178,6 @@ export async function initDatabase() {
     CREATE TABLE IF NOT EXISTS user_config (
       id              INTEGER PRIMARY KEY DEFAULT 1,
       first_launch    INTEGER DEFAULT 1,
-      daily_goal      INTEGER DEFAULT 20,
       streak_days     INTEGER DEFAULT 0,
       last_study_date TEXT,
       total_studied   INTEGER DEFAULT 0,
@@ -190,9 +188,6 @@ export async function initDatabase() {
       placement_done  INTEGER DEFAULT 0,
       current_lesson_id INTEGER,
       suggestion_dismissed_at INTEGER DEFAULT -1,
-      hearts          INTEGER DEFAULT 5,
-      hearts_updated_at INTEGER,
-      xp_total        INTEGER DEFAULT 0,
       auto_speak      INTEGER DEFAULT 1,
       sound_effects   INTEGER DEFAULT 1,
       new_per_day     INTEGER DEFAULT 10,

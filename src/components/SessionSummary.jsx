@@ -8,7 +8,7 @@ import { RADIUS, SPACING, SHADOW } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import { playEffect } from '../services/soundService';
 
-export default function SessionSummary({ correct = 0, wrong = 0, stars = null, xp = 0, heartGained = false, durationSecs = 0, onContinue }) {
+export default function SessionSummary({ title, correct = 0, wrong = 0, stars = null, durationSecs = 0, onContinue }) {
   const total = correct + wrong;
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export default function SessionSummary({ correct = 0, wrong = 0, stars = null, x
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.congrats}>🎉 {heartGained ? '¡Repaso completado!' : '¡Lección completada!'}</Text>
+        <Text style={styles.congrats}>🎉 {title}</Text>
 
         <View style={styles.statsRow}>
           <View style={styles.stat}>
@@ -33,10 +33,6 @@ export default function SessionSummary({ correct = 0, wrong = 0, stars = null, x
           </View>
         </View>
 
-        <Animated.Text entering={ZoomIn.delay(150).springify()} style={styles.xp}>+{xp} XP</Animated.Text>
-        {heartGained && (
-          <Animated.Text entering={FadeInDown.delay(350)} style={styles.heart}>+1 ❤️ vida recuperada</Animated.Text>
-        )}
         {stars != null && (
           <View style={styles.starsRow}>
             {[0, 1, 2].map(i => (
@@ -50,13 +46,18 @@ export default function SessionSummary({ correct = 0, wrong = 0, stars = null, x
         <Animated.View entering={FadeInDown.delay(900)} style={styles.ratingsRow}>
           <View style={[styles.ratingPill, { backgroundColor: Rating.good + '20' }]}>
             <Ionicons name="checkmark-circle" size={16} color={Rating.good} />
-            <Text style={[styles.ratingText, { color: Rating.good }]}>{correct} a la primera</Text>
+            <Text style={[styles.ratingText, { color: Rating.good }]}>{correct} recordadas</Text>
           </View>
           <View style={[styles.ratingPill, { backgroundColor: Rating.again + '20' }]}>
             <Ionicons name="refresh-circle" size={16} color={Rating.again} />
             <Text style={[styles.ratingText, { color: Rating.again }]}>{wrong} a repasar</Text>
           </View>
         </Animated.View>
+        {wrong > 0 && (
+          <Animated.Text entering={FadeInDown.delay(1100)} style={styles.note}>
+            Lo que fallaste volverá pronto: equivocarse y ver la respuesta también ayuda a aprender.
+          </Animated.Text>
+        )}
 
         <TouchableOpacity style={styles.primaryButton} onPress={onContinue} activeOpacity={0.8}>
           <Text style={styles.primaryButtonText}>Continuar</Text>
@@ -83,17 +84,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...SHADOW.card,
   },
-  xp: {
-    fontFamily: FONT_FAMILY.bold,
-    fontSize: 32,
-    color: COLORS.goldText,
-    marginBottom: SPACING.sm,
-  },
-  heart: {
-    fontFamily: FONT_FAMILY.semiBold,
-    fontSize: 15,
-    color: COLORS.dangerOrange,
-    marginBottom: SPACING.sm,
+  note: {
+    fontFamily: FONT_FAMILY.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: SPACING.lg,
   },
   starsRow: {
     flexDirection: 'row',

@@ -6,16 +6,17 @@ import { COLORS } from '../theme/colors';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import { useSettings } from '../hooks/useSettings';
-import { DAILY_GOAL_OPTIONS, LEVEL_LABELS } from '../utils/constants';
+import { NEW_PER_DAY_OPTIONS, LEVEL_LABELS } from '../utils/constants';
+import { RETENTION_OPTIONS, DEFAULT_RETENTION } from '../services/srs.mjs';
+import { NEW_PER_DAY_DEFAULT } from '../hooks/useStudySession';
 import ScreenHeader from '../components/ScreenHeader';
 import StatusBarScrim from '../components/StatusBarScrim';
 
 export default function SettingsScreen({ navigation }) {
   const {
     config,
-    loading,
     notificationsSupported,
-    updateDailyGoal,
+    updateSetting,
     toggleNotifications,
     updateNotifHour,
     toggleSetting,
@@ -70,45 +71,43 @@ export default function SettingsScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Daily goal */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Meta diaria de XP</Text>
-          <View style={styles.goalOptions}>
-            {DAILY_GOAL_OPTIONS.map(goal => (
-              <TouchableOpacity
-                key={goal}
-                style={[
-                  styles.goalChip,
-                  {
-                    backgroundColor:
-                      (config?.daily_goal || 20) === goal
-                        ? COLORS.deepOlive
-                        : COLORS.sageCream,
-                    borderColor:
-                      (config?.daily_goal || 20) === goal
-                        ? COLORS.deepOlive
-                        : COLORS.borderSage,
-                  },
-                ]}
-                onPress={() => updateDailyGoal(goal)}
-                activeOpacity={0.7}
-              >
-                <Text
-                  style={[
-                    styles.goalChipText,
-                    {
-                      color:
-                        (config?.daily_goal || 20) === goal
-                          ? COLORS.surfaceWhite
-                          : COLORS.textSecondary,
-                    },
-                  ]}
-                >
-                  {goal} XP
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <Text style={styles.sectionTitle}>Palabras nuevas por día</Text>
+          <Chips
+            options={NEW_PER_DAY_OPTIONS.map(n => ({ value: n, label: String(n) }))}
+            value={config?.new_per_day ?? NEW_PER_DAY_DEFAULT}
+            onChange={value => updateSetting('new_per_day', value)}
+          />
+          <Text style={styles.helperText}>
+            Cada palabra nueva trae varios repasos en las semanas siguientes. Empieza con pocas.
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Retención objetivo</Text>
+          <Chips
+            options={RETENTION_OPTIONS.map(r => ({ value: r, label: `${Math.round(r * 100)}%` }))}
+            value={config?.desired_retention ?? DEFAULT_RETENTION}
+            onChange={value => updateSetting('desired_retention', value)}
+          />
+          <Text style={styles.helperText}>
+            Probabilidad de recordar una palabra cuando toca repasarla. Más alta significa más repasos al día.
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Modo de repaso</Text>
+          <Chips
+            options={[
+              { value: 'type', label: 'Escribir la respuesta' },
+              { value: 'flip', label: 'Voltear tarjeta' },
+            ]}
+            value={config?.review_mode || 'type'}
+            onChange={value => updateSetting('review_mode', value)}
+          />
+          <Text style={styles.helperText}>
+            Escribir obliga a recordar de verdad y fija mejor la palabra; voltear es más rápido.
+          </Text>
         </View>
 
         {/* Notifications */}
@@ -211,7 +210,39 @@ export default function SettingsScreen({ navigation }) {
   );
 }
 
+function Chips({ options, value, onChange }) {
+  return (
+    <View style={styles.goalOptions}>
+      {options.map(option => {
+        const active = option.value === value;
+        return (
+          <TouchableOpacity
+            key={String(option.value)}
+            style={[styles.goalChip, active ? styles.chipActive : styles.chipIdle]}
+            onPress={() => onChange(option.value)}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+          >
+            <Text style={[styles.goalChipText, { color: active ? COLORS.surfaceWhite : COLORS.textSecondary }]}>
+              {option.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  chipActive: {
+    backgroundColor: COLORS.deepOlive,
+    borderColor: COLORS.deepOlive,
+  },
+  chipIdle: {
+    backgroundColor: COLORS.sageCream,
+    borderColor: COLORS.borderSage,
+  },
   aboutCredits: {
     fontFamily: FONT_FAMILY.regular,
     fontSize: 12,
@@ -240,6 +271,8 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   goalChip: {
+    minHeight: 44,
+    justifyContent: 'center',
     paddingHorizontal: SPACING.base,
     paddingVertical: SPACING.sm,
     borderRadius: RADIUS.pill,
