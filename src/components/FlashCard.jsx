@@ -13,13 +13,13 @@ import { COLORS } from '../theme/colors';
 import { RADIUS, SHADOW, LAYOUT } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import CardImage from './CardImage';
-import RatingButtons from './RatingButtons';
+import RatingButtons, { FLIP_OPTIONS } from './RatingButtons';
 import { formatCategoryName } from '../utils/formatters';
 import { enrichWord } from '../services/enrichmentService';
 import { speak, speakAuto } from '../services/audioService';
 
 // `card` is a normalized card ({ type, en, es, ... }) from quiz.toCard.
-export default function FlashCard({ card, onRate, intervals }) {
+export default function FlashCard({ card, onRate }) {
   const rotation = useSharedValue(0);
   const [flipped, setFlipped] = useState(false);
   // Local copy so enriched content (phonetic, photo, definition) appears live.
@@ -92,7 +92,7 @@ export default function FlashCard({ card, onRate, intervals }) {
           {isWord && data.example_es ? <Text style={styles.definition}>{data.example_es}</Text> : null}
           {card.falseFriend ? <Text style={styles.falseFriend}>⚠️ {card.falseFriend}</Text> : null}
         </View>
-        {flipped && <RatingButtons onPress={onRate} intervals={intervals} />}
+        {flipped && <RatingButtons options={FLIP_OPTIONS} onPress={onRate} />}
       </Animated.View>
     </TouchableOpacity>
   );

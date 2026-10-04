@@ -51,7 +51,7 @@ export default function StudySessionScreen({ navigation, route }) {
         </View>
       ) : step.type === EXERCISE.FLIP ? (
         <View style={styles.center}>
-          <FlashCard card={step.card} onRate={session.grade} intervals={session.intervals} />
+          <FlashCard card={step.card} onRate={session.grade} />
           <Text style={styles.hint}>Intenta recordarla, toca la tarjeta y califica qué tan bien la sabías</Text>
         </View>
       ) : (
@@ -60,7 +60,7 @@ export default function StudySessionScreen({ navigation, route }) {
           step={step}
           onCheck={session.answer}
           onNext={() => session.grade(null)}
-          grading={{ intervals: session.intervals, onGrade: session.grade }}
+          onGrade={session.grade}
         />
       )}
     </SafeAreaView>

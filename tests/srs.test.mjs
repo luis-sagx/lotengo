@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { review, retrievability, suggestGrade, formatInterval, previewIntervals, GRADE, State } from '../src/services/srs.mjs';
+import { review, retrievability, gradeFor, GRADE, State } from '../src/services/srs.mjs';
 
 const T0 = new Date('2026-01-01T09:00:00Z');
 const MIN = 60000;
@@ -65,17 +65,10 @@ test('retrievability is 0 for unseen cards and decays over time', () => {
   assert.ok(soon > later && later > 0 && soon <= 1);
 });
 
-test('suggested grade follows correctness, typos and speed', () => {
-  assert.equal(suggestGrade({ correct: false }), GRADE.AGAIN);
-  assert.equal(suggestGrade({ correct: true, typo: true }), GRADE.HARD);
-  assert.equal(suggestGrade({ correct: true, ms: 20000 }), GRADE.HARD);
-  assert.equal(suggestGrade({ correct: true, ms: 3000 }), GRADE.GOOD);
-});
-
-test('intervals are labelled for the rating buttons', () => {
-  assert.equal(formatInterval(10 * MIN), '10 min');
-  assert.equal(formatInterval(3 * DAY), '3 d');
-  const labels = previewIntervals(null, { now: T0 });
-  assert.equal(labels[GRADE.AGAIN], '1 min');
-  assert.equal(labels[GRADE.GOOD], '10 min');
+test('grade comes from correctness plus how the answer felt', () => {
+  assert.equal(gradeFor('easy', { correct: false }), GRADE.AGAIN);
+  assert.equal(gradeFor('hard', { correct: true }), GRADE.HARD);
+  assert.equal(gradeFor('good', { correct: true }), GRADE.GOOD);
+  assert.equal(gradeFor('easy', { correct: true }), GRADE.EASY);
+  assert.equal(gradeFor('easy', { correct: true, typo: true }), GRADE.GOOD);
 });

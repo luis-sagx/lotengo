@@ -16,8 +16,6 @@ export const DEFAULT_RETENTION = 0.9;
 export const RETENTION_OPTIONS = [0.85, 0.9, 0.95];
 // Stability (days) from which a card counts as mature, as in Anki.
 export const MATURE_DAYS = 21;
-// Answers slower than this suggest Hard even when correct.
-export const SLOW_ANSWER_MS = 15000;
 
 const schedulers = new Map();
 
@@ -88,32 +86,12 @@ export function retrievability(row, now = new Date()) {
   return scheduler().get_retrievability(rowToCard(row, now), now, false);
 }
 
-// Grade suggested from an objective answer; the learner can override it.
-export function suggestGrade({ correct, typo = false, ms = 0 }) {
+// The learner only says how a correct answer felt ('hard' | 'good' | 'easy');
+// correctness decides the rest. A wrong answer is always a lapse, and a typo
+// caps the grade at Good.
+export function gradeFor(choice, { correct, typo = false }) {
   if (!correct) return GRADE.AGAIN;
-  if (typo || ms > SLOW_ANSWER_MS) return GRADE.HARD;
+  if (choice === 'hard') return GRADE.HARD;
+  if (choice === 'easy' && !typo) return GRADE.EASY;
   return GRADE.GOOD;
-}
-
-// Human label for the next interval ("10 min", "3 d", "2 m").
-export function formatInterval(ms) {
-  const minutes = Math.max(1, Math.round(ms / 60000));
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} h`;
-  const days = Math.round(hours / 24);
-  if (days < 31) return `${days} d`;
-  const months = Math.round(days / 30);
-  if (months < 12) return `${months} m`;
-  return `${(days / 365).toFixed(1)} a`;
-}
-
-// Next interval for every grade, for labelling the rating buttons.
-export function previewIntervals(row, { now = new Date(), retention = DEFAULT_RETENTION } = {}) {
-  const preview = scheduler(retention).repeat(rowToCard(row, now), now);
-  const result = {};
-  for (const grade of Object.values(GRADE)) {
-    result[grade] = formatInterval(preview[grade].card.due.getTime() - now.getTime());
-  }
-  return result;
 }

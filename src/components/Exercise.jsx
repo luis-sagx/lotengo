@@ -11,7 +11,8 @@ import { speak, speakAuto, speakSlow, registerAudio } from '../services/audioSer
 import { playEffect } from '../services/soundService';
 import { enrichWord } from '../services/enrichmentService';
 import { EXERCISE, TYPED } from '../services/quiz.mjs';
-import RatingButtons from './RatingButtons';
+import { GRADE, gradeFor } from '../services/srs.mjs';
+import RatingButtons, { ANSWER_OPTIONS } from './RatingButtons';
 
 const INSTRUCTIONS = {
   [EXERCISE.CHOOSE_ES]: '¿Qué significa?',
@@ -23,18 +24,22 @@ const INSTRUCTIONS = {
   [EXERCISE.LISTEN_TYPE]: 'Escucha y escribe lo que oyes',
 };
 
+// Exercises where the learner never saw the translation, so feedback adds it.
+const SHOW_MEANING = new Set([EXERCISE.LISTEN, EXERCISE.LISTEN_TYPE, EXERCISE.CLOZE]);
+
 // Audio would give the answer away in these.
 const SILENT = new Set([EXERCISE.CHOOSE_EN, EXERCISE.BUILD, EXERCISE.TYPE_EN, EXERCISE.CLOZE]);
 const LISTENING = new Set([EXERCISE.LISTEN, EXERCISE.LISTEN_TYPE]);
 
-// Renders the current step. `onCheck(value)` returns { correct, typo, suggested };
-// `onNext()` advances once the learner has seen the feedback. With `grading`
-// ({ intervals, onGrade }) the feedback offers the four FSRS grades instead.
-export default function Exercise({ step, onCheck, onNext, grading }) {
+// Renders the current step. `onCheck(value)` returns { correct, typo };
+// `onNext()` advances once the learner has seen the feedback. With
+// `onGrade(grade)` a correct answer asks how it felt (three buttons) and a
+// wrong one is graded Again; the FSRS grade itself is never shown.
+export default function Exercise({ step, onCheck, onNext, onGrade }) {
   const [selected, setSelected] = useState(null);
   const [tiles, setTiles] = useState([]);
   const [typed, setTyped] = useState('');
-  const [result, setResult] = useState(null); // null | { correct, typo, suggested }
+  const [result, setResult] = useState(null); // null | { correct, typo }
 
   useEffect(() => {
     setSelected(null);
@@ -163,22 +168,40 @@ export default function Exercise({ step, onCheck, onNext, grading }) {
 
       {answered ? (
         <Footer tone={correct ? 'right' : 'wrong'}>
-          <Text style={[styles.feedbackTitle, { color: correct ? COLORS.successGreen : COLORS.dangerOrange }]}>
-            {!correct ? 'Respuesta correcta:' : result.typo ? 'Casi perfecto, se escribe:' : '¡Correcto!'}
-          </Text>
-          {(!correct || result.typo) && <Text style={styles.feedbackAnswer}>{step.answer}</Text>}
-          <Text style={styles.feedbackMeaning}>{step.card.en} = {step.card.es}</Text>
-          {step.card.falseFriend ? <Text style={styles.falseFriend}>⚠️ {step.card.falseFriend}</Text> : null}
-          {grading ? (
+          <View style={styles.feedbackHeader}>
+            <Ionicons
+              name={correct ? 'checkmark-circle' : 'close-circle'}
+              size={28}
+              color={correct ? COLORS.successGreen : COLORS.dangerOrange}
+            />
+            <Text style={[styles.feedbackTitle, { color: correct ? COLORS.successGreen : COLORS.dangerOrange }]}>
+              {!correct ? 'Incorrecto' : result.typo ? 'Casi, revisa la escritura' : '¡Correcto!'}
+            </Text>
+          </View>
+
+          {(!correct || result.typo) && (
+            <View style={styles.feedbackBlock}>
+              <Text style={styles.feedbackLabel}>{correct ? 'SE ESCRIBE' : 'RESPUESTA CORRECTA'}</Text>
+              <Text style={styles.feedbackAnswer}>{step.answer}</Text>
+            </View>
+          )}
+          {SHOW_MEANING.has(step.type) && (
+            <Text style={styles.feedbackMeaning}>{step.card.en} · {step.card.es}</Text>
+          )}
+          {step.card.falseFriend ? (
+            <Text style={[styles.falseFriend, styles.feedbackNote]}>⚠️ {step.card.falseFriend}</Text>
+          ) : null}
+
+          {onGrade && correct ? (
             <>
-              <Text style={styles.gradeHint}>¿Qué tan bien lo recordaste?</Text>
-              <RatingButtons onPress={grading.onGrade} intervals={grading.intervals} suggested={result.suggested} />
+              <Text style={styles.gradeHint}>¿Qué tal te resultó?</Text>
+              <RatingButtons options={ANSWER_OPTIONS} onPress={choice => onGrade(gradeFor(choice, result))} />
             </>
           ) : (
             <PrimaryButton
               label="Continuar"
               color={correct ? COLORS.successGreen : COLORS.dangerOrange}
-              onPress={onNext}
+              onPress={onGrade ? () => onGrade(GRADE.AGAIN) : onNext}
             />
           )}
         </Footer>
@@ -475,12 +498,12 @@ const styles = StyleSheet.create({
     color: 'transparent',
   },
   footer: {
-    padding: SPACING.base,
-    paddingBottom: SPACING.lg,
-    borderTopWidth: 1,
+    paddingHorizontal: SPACING.xl,
+    paddingTop: SPACING.lg,
+    paddingBottom: SPACING.xl,
+    borderTopWidth: 2,
     borderTopColor: COLORS.borderSage,
     backgroundColor: COLORS.warmParchment,
-    gap: SPACING.xs,
   },
   footerRight: {
     backgroundColor: '#e7f6ee',
@@ -490,20 +513,45 @@ const styles = StyleSheet.create({
     backgroundColor: '#fdece4',
     borderTopColor: COLORS.dangerOrange,
   },
+  feedbackHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+    marginBottom: SPACING.md,
+  },
   feedbackTitle: {
     fontFamily: FONT_FAMILY.bold,
-    fontSize: 18,
+    fontSize: 20,
+    lineHeight: 26,
+    flexShrink: 1,
+  },
+  feedbackNote: {
+    textAlign: 'left',
+    marginTop: 0,
+    marginBottom: SPACING.sm,
+  },
+  feedbackBlock: {
+    marginBottom: SPACING.sm,
+  },
+  feedbackLabel: {
+    fontFamily: FONT_FAMILY.semiBold,
+    fontSize: 12,
+    letterSpacing: 0.8,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING.xxs,
   },
   feedbackAnswer: {
-    fontFamily: FONT_FAMILY.semiBold,
-    fontSize: 16,
-    color: COLORS.oliveInk,
+    fontFamily: FONT_FAMILY.bold,
+    fontSize: 20,
+    lineHeight: 26,
+    color: COLORS.deepOlive,
   },
   feedbackMeaning: {
     fontFamily: FONT_FAMILY.regular,
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.xs,
+    fontSize: 15,
+    lineHeight: 22,
+    color: COLORS.oliveInk,
+    marginBottom: SPACING.sm,
   },
   input: {
     minHeight: 56,
@@ -537,10 +585,11 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
   },
   gradeHint: {
-    fontFamily: FONT_FAMILY.medium,
-    fontSize: 13,
-    color: COLORS.textSecondary,
+    fontFamily: FONT_FAMILY.semiBold,
+    fontSize: 15,
+    color: COLORS.oliveInk,
     marginTop: SPACING.sm,
+    marginBottom: SPACING.md,
   },
   primary: {
     height: 52,

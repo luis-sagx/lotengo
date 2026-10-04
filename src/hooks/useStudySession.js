@@ -6,7 +6,7 @@ import {
   answerCard, getDueCards, getPracticeCards, getNewCards, getNewCardsSince, getDistractorCards,
 } from '../database/progressRepository';
 import { saveSession, incrementTotalStudied, updateStreak, getConfig } from '../database/sessionRepository';
-import { GRADE, previewIntervals, suggestGrade } from '../services/srs.mjs';
+import { GRADE } from '../services/srs.mjs';
 import { endOfLocalDay, startOfLocalDay } from '../services/streak.mjs';
 import { EXERCISE, toCard, makeExercise, exerciseFor, gradeAnswer, pickNew, planDaily } from '../services/quiz.mjs';
 
@@ -43,7 +43,6 @@ export function useStudySession({ practice: practiceOnly = false } = {}) {
   const sessionStart = useRef(Date.now());
   const stepStart = useRef(Date.now());
   const retention = useRef(undefined);
-  const lastAnswer = useRef(null);
 
   useEffect(() => {
     (async () => {
@@ -96,17 +95,12 @@ export function useStudySession({ practice: practiceOnly = false } = {}) {
 
   const advance = useCallback(async (queue) => {
     stepStart.current = Date.now();
-    lastAnswer.current = null;
     if (index + 1 < queue.length) setIndex(index + 1);
     else await finish();
   }, [index, finish]);
 
-  // Checks the current exercise; returns { correct, typo, suggested }.
-  const answer = useCallback((value) => {
-    const result = gradeAnswer(steps[index], value);
-    lastAnswer.current = { ...result, suggested: suggestGrade({ ...result, ms: Date.now() - stepStart.current }) };
-    return lastAnswer.current;
-  }, [steps, index]);
+  // Checks the current exercise; returns { correct, typo }.
+  const answer = useCallback((value) => gradeAnswer(steps[index], value), [steps, index]);
 
   // Grades the current card (any step but an intro) and moves on.
   const grade = useCallback(async (value) => {
@@ -139,10 +133,5 @@ export function useStudySession({ practice: practiceOnly = false } = {}) {
     }
   }, [steps, index, practice, mode, advance]);
 
-  const step = steps[index] || null;
-  const intervals = step && !practice && step.type !== EXERCISE.INTRO
-    ? previewIntervals(step.card.due != null ? step.card : null, { retention: retention.current })
-    : {};
-
-  return { step, index, total: steps.length, loading, error, completed, practice, answer, grade, intervals };
+  return { step: steps[index] || null, index, total: steps.length, loading, error, completed, practice, answer, grade };
 }
