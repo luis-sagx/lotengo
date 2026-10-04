@@ -17,6 +17,7 @@ export default function SettingsScreen({ navigation }) {
     updateDailyGoal,
     toggleNotifications,
     updateNotifHour,
+    toggleSetting,
     resetProgress,
   } = useSettings();
   const [notifHour, setNotifHour] = useState(config?.notif_hour || 9);
@@ -155,8 +156,20 @@ export default function SettingsScreen({ navigation }) {
             <Text style={styles.settingLabel}>Pronunciación automática</Text>
           </View>
           <Switch
-            value={true}
-            onValueChange={() => {}}
+            value={config?.auto_speak !== 0}
+            onValueChange={value => toggleSetting('auto_speak', value)}
+            trackColor={{ false: COLORS.borderSage, true: COLORS.successGreen }}
+            thumbColor={COLORS.surfaceWhite}
+          />
+        </View>
+        <View style={styles.settingRow}>
+          <View style={styles.settingInfo}>
+            <Ionicons name="musical-notes" size={22} color={COLORS.oliveInk} />
+            <Text style={styles.settingLabel}>Efectos de sonido y vibración</Text>
+          </View>
+          <Switch
+            value={config?.sound_effects !== 0}
+            onValueChange={value => toggleSetting('sound_effects', value)}
             trackColor={{ false: COLORS.borderSage, true: COLORS.successGreen }}
             thumbColor={COLORS.surfaceWhite}
           />
@@ -179,7 +192,7 @@ export default function SettingsScreen({ navigation }) {
           <Text style={styles.aboutApp}>saflash</Text>
           <Text style={styles.aboutVersion}>Versión 1.0.0</Text>
           <Text style={styles.aboutDescription}>
-            Aprendé inglés con tarjetas inteligentes. Ruta guiada A1-C1, modo libre y repetición espaciada.
+            Aprende inglés desde cero con una ruta guiada A1–C1, ejercicios y repetición espaciada.
           </Text>
         </View>
       </View>

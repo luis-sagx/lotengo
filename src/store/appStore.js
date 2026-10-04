@@ -15,8 +15,6 @@ const useAppStore = create((set) => ({
   notifications: true,
   setNotifications: (enabled) => set({ notifications: enabled }),
 
-  soundEnabled: true,
-  setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
 
   // ── Stats cache (updated after study) ─────
   streakDays: 0,

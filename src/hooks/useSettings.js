@@ -10,6 +10,8 @@ import {
 } from '../database/sessionRepository';
 import { isNotificationsSupported, scheduleDailyNotification } from '../services/notifications';
 import useAppStore from '../store/appStore';
+import { setAutoSpeak } from '../services/audioService';
+import { setEffectsEnabled } from '../services/soundService';
 
 export function useSettings() {
   const [config, setConfig] = useState(null);
@@ -68,6 +70,17 @@ export function useSettings() {
     }
   }, []);
 
+  const toggleSetting = useCallback(async (field, enabled) => {
+    try {
+      await updateConfig({ [field]: enabled ? 1 : 0 });
+      if (field === 'auto_speak') setAutoSpeak(enabled);
+      if (field === 'sound_effects') setEffectsEnabled(enabled);
+      setConfig(prev => prev ? { ...prev, [field]: enabled ? 1 : 0 } : prev);
+    } catch (err) {
+      console.error(`Error updating ${field}:`, err);
+    }
+  }, []);
+
   const resetProgress = useCallback(async () => {
     // This would drop and recreate progress tables
     // For now, reset config stats
@@ -86,6 +99,7 @@ export function useSettings() {
     updateDailyGoal,
     toggleNotifications,
     updateNotifHour,
+    toggleSetting,
     resetProgress,
     refresh: loadConfig,
   };

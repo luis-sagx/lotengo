@@ -1,13 +1,18 @@
 // saflash — Session summary (shown after completing a study session)
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, Rating } from '../theme/colors';
 import { RADIUS, SPACING, SHADOW } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
+import { playEffect } from '../services/soundService';
 
 export default function SessionSummary({ correct = 0, wrong = 0, stars = null, xp = 0, heartGained = false, durationSecs = 0, onContinue }) {
   const total = correct + wrong;
+
+  useEffect(() => {
+    playEffect('complete');
+  }, []);
   const mins = Math.floor(durationSecs / 60);
   const secs = durationSecs % 60;
 

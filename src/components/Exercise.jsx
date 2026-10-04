@@ -6,7 +6,8 @@ import { COLORS } from '../theme/colors';
 import { RADIUS, SPACING, SHADOW } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import CardImage from './CardImage';
-import { speak } from '../services/audioService';
+import { speak, speakAuto, speakSlow } from '../services/audioService';
+import { playEffect } from '../services/soundService';
 import { enrichWord } from '../services/enrichmentService';
 import { EXERCISE } from '../services/quiz.mjs';
 
@@ -28,7 +29,9 @@ export default function Exercise({ step, onCheck, onNext }) {
     setSelected(null);
     setTiles([]);
     setResult(null);
-    if (step.type !== EXERCISE.CHOOSE_EN && step.type !== EXERCISE.BUILD) speak(step.card.en);
+    // Listening needs the audio regardless of the auto-speak setting.
+    if (step.type === EXERCISE.LISTEN) speak(step.card.en);
+    else if (step.type !== EXERCISE.CHOOSE_EN && step.type !== EXERCISE.BUILD) speakAuto(step.card.en);
   }, [step]);
 
   if (step.type === EXERCISE.INTRO) {
@@ -48,7 +51,9 @@ export default function Exercise({ step, onCheck, onNext }) {
   const check = () => {
     const correct = onCheck(value);
     setResult(correct);
-    if (correct || step.type === EXERCISE.BUILD) speak(step.card.en);
+    playEffect(correct ? 'correct' : 'wrong');
+    // Let the chime finish before reading the answer aloud.
+    setTimeout(() => speakAuto(step.card.en), 400);
   };
 
   return (
@@ -57,13 +62,22 @@ export default function Exercise({ step, onCheck, onNext }) {
         <Text style={styles.instruction}>{INSTRUCTIONS[step.type]}</Text>
 
         {step.type === EXERCISE.LISTEN ? (
-          <TouchableOpacity
-            style={styles.listenButton}
-            onPress={() => speak(step.card.en)}
-            accessibilityLabel="Escuchar de nuevo"
-          >
-            <Ionicons name="volume-high" size={44} color={COLORS.surfaceWhite} />
-          </TouchableOpacity>
+          <View style={styles.listenRow}>
+            <TouchableOpacity
+              style={styles.listenButton}
+              onPress={() => speak(step.card.en)}
+              accessibilityLabel="Escuchar de nuevo"
+            >
+              <Ionicons name="volume-high" size={44} color={COLORS.surfaceWhite} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.slowButton}
+              onPress={() => speakSlow(step.card.en)}
+              accessibilityLabel="Escuchar despacio"
+            >
+              <Text style={styles.slowIcon}>🐢</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <View style={styles.promptRow}>
             {step.type === EXERCISE.CHOOSE_ES && (
@@ -286,15 +300,31 @@ const styles = StyleSheet.create({
     color: COLORS.oliveInk,
     flexShrink: 1,
   },
+  listenRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.base,
+    marginBottom: SPACING.xl,
+  },
+  slowButton: {
+    width: 56,
+    height: 56,
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLORS.sageCream,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  slowIcon: {
+    fontSize: 26,
+  },
   listenButton: {
-    alignSelf: 'center',
     width: 96,
     height: 96,
     borderRadius: RADIUS.pill,
     backgroundColor: COLORS.focusBlue,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SPACING.xl,
     ...SHADOW.button,
   },
   options: {

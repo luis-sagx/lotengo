@@ -4,7 +4,7 @@ import * as SQLite from 'expo-sqlite';
 let db = null;
 
 // Bump when seed content or the path changes: older databases are rebuilt.
-export const CONTENT_VERSION = 3;
+export const CONTENT_VERSION = 4;
 const TABLES = [
   'lesson_progress', 'lesson_cards', 'lessons', 'user_progress',
   'study_sessions', 'user_config', 'words', 'phrases',
@@ -127,7 +127,9 @@ export async function initDatabase() {
       suggestion_dismissed_at INTEGER DEFAULT -1,
       hearts          INTEGER DEFAULT 5,
       hearts_updated_at INTEGER,
-      xp_total        INTEGER DEFAULT 0
+      xp_total        INTEGER DEFAULT 0,
+      auto_speak      INTEGER DEFAULT 1,
+      sound_effects   INTEGER DEFAULT 1
     );
   `);
 
