@@ -231,3 +231,26 @@ export async function resetAllProgress() {
   });
   await restoreLessonProgress();
 }
+
+// Every progress row with its word's frequency, for retention and coverage.
+export async function getMemoryRows() {
+  return getDatabase().getAllAsync(
+    `SELECT up.*, COALESCE(w.per_million, 0) AS per_million
+     FROM user_progress up
+     LEFT JOIN words w ON up.card_type = 'word' AND w.id = up.card_id`
+  );
+}
+
+// Grades given to cards that were in review (not learning) since `since`.
+export async function getReviewRatings(since) {
+  const rows = await getDatabase().getAllAsync(
+    'SELECT rating FROM review_log WHERE state = 2 AND reviewed_at >= ?',
+    [since]
+  );
+  return rows.map(r => r.rating);
+}
+
+export async function getDueTimes(until) {
+  const rows = await getDatabase().getAllAsync('SELECT due FROM user_progress WHERE due <= ?', [until]);
+  return rows.map(r => r.due);
+}

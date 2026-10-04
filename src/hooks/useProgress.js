@@ -1,6 +1,10 @@
 // saflash — Progress/stats hook
 import { useState, useCallback } from 'react';
-import { getStudyStats, getAchievementStats } from '../database/progressRepository';
+import {
+  getStudyStats, getAchievementStats, getMemoryRows, getReviewRatings, getDueTimes,
+} from '../database/progressRepository';
+import { memorySummary, trueRetention, dueForecast } from '../services/stats.mjs';
+import { DEFAULT_RETENTION } from '../services/srs.mjs';
 import { getConfig, getWeekStats } from '../database/sessionRepository';
 import { getTotalWordsCount } from '../database/wordsRepository';
 import { getTotalPhrasesCount } from '../database/phrasesRepository';
@@ -15,6 +19,10 @@ export function useProgress() {
     totalWords: 5000,
     totalPhrases: 500,
     weekData: [],
+    memory: { retained: 0, mature: 0, coverage: 0 },
+    retention: { rate: null, count: 0 },
+    targetRetention: DEFAULT_RETENTION,
+    forecast: [],
     achievements: [],
     loading: true,
   });
@@ -31,6 +39,9 @@ export function useProgress() {
         totalWords,
         totalPhrases,
         achievementStats,
+        memoryRows,
+        ratings,
+        dueTimes,
       ] = await Promise.all([
         getStudyStats(),
         getConfig(),
@@ -38,6 +49,9 @@ export function useProgress() {
         getTotalWordsCount(),
         getTotalPhrasesCount(),
         getAchievementStats(),
+        getMemoryRows(),
+        getReviewRatings(Date.now() - 30 * 86400000),
+        getDueTimes(Date.now() + 7 * 86400000),
       ]);
 
       const currentStats = {
@@ -56,6 +70,10 @@ export function useProgress() {
         totalWords: totalWords || 5000,
         totalPhrases: totalPhrases || 500,
         weekData: weekData || [],
+        memory: memorySummary(memoryRows),
+        retention: trueRetention(ratings),
+        targetRetention: config?.desired_retention || DEFAULT_RETENTION,
+        forecast: dueForecast(dueTimes),
         achievements: checkAchievements(currentStats),
         loading: false,
       });
