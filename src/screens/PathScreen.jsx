@@ -105,8 +105,8 @@ export default function PathScreen({ navigation }) {
           <View style={styles.pickOptions}>
             {Object.keys(LEVEL_SELF_DESCRIPTIONS).map(level => (
               <TouchableOpacity key={level} style={styles.pickButton} onPress={() => chooseLevel(level)}>
-                <Text style={styles.pickLevel}>{level}</Text>
-                <Text style={styles.pickLabel}>{LEVEL_LABELS[level]}</Text>
+                <Text style={styles.pickLevel}>{LEVEL_LABELS[level]}</Text>
+                <Text style={styles.pickLabel}>{LEVEL_SELF_DESCRIPTIONS[level]}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -124,7 +124,7 @@ export default function PathScreen({ navigation }) {
             <Ionicons name="chevron-back" size={22} color={COLORS.deepOlive} />
           </TouchableOpacity>
           <View style={styles.pageCopy}>
-            <Text style={styles.pathTitle}>{visibleLevel} · {LEVEL_LABELS[visibleLevel]}</Text>
+            <Text style={styles.pathTitle}>{LEVEL_LABELS[visibleLevel]}</Text>
             <Text style={styles.pageLabel}>Nivel {levelPosition + 1} de {LEVELS.length}</Text>
           </View>
           <TouchableOpacity
