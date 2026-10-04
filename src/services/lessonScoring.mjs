@@ -1,10 +1,9 @@
 // saflash — Pure lesson scoring helpers.
-import { RATING } from '../utils/constants.js';
 
-export function accuracyFromRatings(ratings) {
-  if (!ratings.length) return 0;
-  const easy = ratings.filter(rating => rating === RATING.EASY).length;
-  return easy / ratings.length;
+// `results` holds one boolean per card: answered right on the first try.
+export function accuracyFromResults(results) {
+  if (!results.length) return 0;
+  return results.filter(Boolean).length / results.length;
 }
 
 export function starsFromAccuracy(accuracy) {
@@ -13,8 +12,8 @@ export function starsFromAccuracy(accuracy) {
   return 1;
 }
 
-export function scoreLesson(ratings) {
-  const accuracy = accuracyFromRatings(ratings);
+export function scoreLesson(results) {
+  const accuracy = accuracyFromResults(results);
   return {
     accuracy,
     stars: starsFromAccuracy(accuracy),

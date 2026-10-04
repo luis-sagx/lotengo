@@ -6,8 +6,8 @@ import { COLORS, Rating } from '../theme/colors';
 import { RADIUS, SPACING, SHADOW } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 
-export default function SessionSummary({ easy = 0, medium = 0, hard = 0, durationSecs = 0, onContinue, onViewProgress }) {
-  const total = easy + medium + hard;
+export default function SessionSummary({ correct = 0, wrong = 0, stars = null, durationSecs = 0, onContinue }) {
+  const total = correct + wrong;
   const mins = Math.floor(durationSecs / 60);
   const secs = durationSecs % 60;
 
@@ -27,30 +27,22 @@ export default function SessionSummary({ easy = 0, medium = 0, hard = 0, duratio
           </View>
         </View>
 
+        {stars != null && <Text style={styles.stars}>{'★'.repeat(stars)}{'☆'.repeat(3 - stars)}</Text>}
+
         <View style={styles.ratingsRow}>
           <View style={[styles.ratingPill, { backgroundColor: Rating.easy + '20' }]}>
             <Ionicons name="checkmark-circle" size={16} color={Rating.easy} />
-            <Text style={[styles.ratingText, { color: Rating.easy }]}>{easy} Fácil</Text>
-          </View>
-          <View style={[styles.ratingPill, { backgroundColor: Rating.medium + '20' }]}>
-            <Ionicons name="remove-circle" size={16} color={Rating.medium} />
-            <Text style={[styles.ratingText, { color: Rating.medium }]}>{medium} Bien</Text>
+            <Text style={[styles.ratingText, { color: Rating.easy }]}>{correct} a la primera</Text>
           </View>
           <View style={[styles.ratingPill, { backgroundColor: Rating.hard + '20' }]}>
-            <Ionicons name="close-circle" size={16} color={Rating.hard} />
-            <Text style={[styles.ratingText, { color: Rating.hard }]}>{hard} Difícil</Text>
+            <Ionicons name="refresh-circle" size={16} color={Rating.hard} />
+            <Text style={[styles.ratingText, { color: Rating.hard }]}>{wrong} a repasar</Text>
           </View>
         </View>
 
         <TouchableOpacity style={styles.primaryButton} onPress={onContinue} activeOpacity={0.8}>
-          <Text style={styles.primaryButtonText}>Seguir estudiando</Text>
+          <Text style={styles.primaryButtonText}>Continuar</Text>
         </TouchableOpacity>
-
-        {onViewProgress && (
-          <TouchableOpacity style={styles.secondaryButton} onPress={onViewProgress} activeOpacity={0.7}>
-            <Text style={styles.secondaryButtonText}>Ver mi progreso</Text>
-          </TouchableOpacity>
-        )}
       </View>
     </View>
   );
@@ -72,6 +64,12 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     alignItems: 'center',
     ...SHADOW.card,
+  },
+  stars: {
+    fontSize: 36,
+    color: COLORS.amberGold,
+    marginBottom: SPACING.base,
+    letterSpacing: 4,
   },
   congrats: {
     fontFamily: FONT_FAMILY.bold,
@@ -131,14 +129,5 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY.semiBold,
     fontSize: 16,
     color: COLORS.surfaceWhite,
-  },
-  secondaryButton: {
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    fontFamily: FONT_FAMILY.semiBold,
-    fontSize: 15,
-    color: COLORS.accentOrange,
   },
 });

@@ -1,52 +1,12 @@
 // saflash — Zustand global store
 import { create } from 'zustand';
 
-const useAppStore = create((set, get) => ({
+const useAppStore = create((set) => ({
   // ── User ──────────────────────────────────
   onboardingDone: false,
   setOnboardingDone: (done) => set({ onboardingDone: done }),
   level: 'A1',
   setLevel: (level) => set({ level }),
-
-  // ── Study Session ─────────────────────────
-  currentSession: null, // { type: 'word'|'phrase', cards: [], currentIndex: 0 }
-  startSession: (sessionType, cards) =>
-    set({
-      currentSession: {
-        type: sessionType,
-        cards,
-        currentIndex: 0,
-        ratings: [],
-        startTime: Date.now(),
-      },
-    }),
-
-  advanceCard: (rating) => {
-    const { currentSession } = get();
-    if (!currentSession) return;
-    const ratings = [...currentSession.ratings, rating];
-    if (currentSession.currentIndex + 1 >= currentSession.cards.length) {
-      // Session complete
-      set({
-        currentSession: {
-          ...currentSession,
-          ratings,
-          completed: true,
-          endTime: Date.now(),
-        },
-      });
-    } else {
-      set({
-        currentSession: {
-          ...currentSession,
-          currentIndex: currentSession.currentIndex + 1,
-          ratings,
-        },
-      });
-    }
-  },
-
-  clearSession: () => set({ currentSession: null }),
 
   // ── Config cache ──────────────────────────
   dailyGoal: 20,

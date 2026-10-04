@@ -57,6 +57,11 @@ export default function AppNavigator() {
         component={StudyLessonScreen}
         options={{ animation: 'slide_from_bottom' }}
       />
+      <Stack.Screen
+        name="ReviewSession"
+        component={StudyLessonScreen}
+        options={{ animation: 'slide_from_bottom' }}
+      />
     </Stack.Navigator>
   );
 }

@@ -101,3 +101,40 @@ export async function searchCards(query, limit = 50) {
     [like, like, like, like, limit]
   );
 }
+
+const CARD_COLUMNS = `
+  COALESCE(w.english_word, p.phrase_en) AS en,
+  COALESCE(w.spanish_trans, p.phrase_es) AS es,
+  w.phonetic, w.example_en, w.example_es, w.image_url, w.enriched,
+  COALESCE(w.category, p.category) AS category`;
+
+export async function getDueCards(limit = 15) {
+  const db = getDatabase();
+  return db.getAllAsync(
+    `SELECT up.card_type, up.card_id AS id, ${CARD_COLUMNS}
+     FROM user_progress up
+     LEFT JOIN words w ON up.card_type = 'word' AND w.id = up.card_id
+     LEFT JOIN phrases p ON up.card_type = 'phrase' AND p.id = up.card_id
+     WHERE up.next_review <= date('now') AND up.status NOT IN ('new', 'known')
+     ORDER BY up.next_review
+     LIMIT ?`,
+    [limit]
+  );
+}
+
+// Extra cards to draw wrong answers from.
+export async function getDistractorCards(level, limit = 24) {
+  const db = getDatabase();
+  return db.getAllAsync(
+    `SELECT * FROM (
+       SELECT 'word' AS card_type, id, english_word AS en, spanish_trans AS es
+       FROM words WHERE difficulty = ? ORDER BY RANDOM() LIMIT ?
+     )
+     UNION ALL
+     SELECT * FROM (
+       SELECT 'phrase', id, phrase_en, phrase_es
+       FROM phrases WHERE difficulty = ? ORDER BY RANDOM() LIMIT ?
+     )`,
+    [level, limit, level, Math.ceil(limit / 3)]
+  );
+}
