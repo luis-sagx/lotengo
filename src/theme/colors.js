@@ -52,9 +52,10 @@ export const COLORS = {
 
 // Semantic aliases for readability in component code
 export const Rating = {
-  hard: COLORS.dangerOrange,
-  medium: COLORS.warningAmber,
-  easy: COLORS.successGreen,
+  again: COLORS.dangerOrange,
+  hard: COLORS.warningAmber,
+  good: COLORS.successGreen,
+  easy: COLORS.focusBlue,
 };
 
 export const Status = {

@@ -180,6 +180,28 @@ export async function unlockUpTo(level) {
   invalidatePath();
 }
 
+// After a content rebuild: a lesson is completed when all its cards have
+// progress, the lesson after it is unlocked, and the chosen level is open.
+export async function restoreLessonProgress() {
+  const db = getDatabase();
+  await db.runAsync(`
+    UPDATE lesson_progress SET status = 'completed'
+    WHERE lesson_id IN (
+      SELECT lc.lesson_id FROM lesson_cards lc
+      LEFT JOIN user_progress up ON up.card_type = lc.card_type AND up.card_id = lc.card_id
+      GROUP BY lc.lesson_id
+      HAVING COUNT(up.id) = COUNT(*)
+    )`);
+  await db.runAsync(`
+    UPDATE lesson_progress SET status = 'unlocked'
+    WHERE status = 'locked'
+      AND lesson_id - 1 IN (SELECT lesson_id FROM lesson_progress WHERE status = 'completed')`);
+  await db.runAsync('UPDATE user_config SET current_lesson_id = NULL WHERE id = 1');
+  const config = await db.getFirstAsync('SELECT level, placement_done FROM user_config WHERE id = 1');
+  if (config?.placement_done === 1) await unlockUpTo(config.level);
+  invalidatePath();
+}
+
 export async function completeLesson(lessonId, accuracy, stars) {
   const db = getDatabase();
   const today = localDate();

@@ -19,7 +19,7 @@ import { enrichWord } from '../services/enrichmentService';
 import { speak, speakAuto } from '../services/audioService';
 
 // `card` is a normalized card ({ type, en, es, ... }) from quiz.toCard.
-export default function FlashCard({ card, onRate }) {
+export default function FlashCard({ card, onRate, intervals }) {
   const rotation = useSharedValue(0);
   const [flipped, setFlipped] = useState(false);
   // Local copy so enriched content (phonetic, photo, definition) appears live.
@@ -90,7 +90,7 @@ export default function FlashCard({ card, onRate }) {
           {!isWord && card.context ? <Text style={styles.definition}>{card.context}</Text> : null}
           {isWord && data.example_en ? <Text style={styles.example}>"{data.example_en}"</Text> : null}
         </View>
-        {flipped && <RatingButtons onPress={onRate} />}
+        {flipped && <RatingButtons onPress={onRate} intervals={intervals} />}
       </Animated.View>
     </TouchableOpacity>
   );

@@ -10,6 +10,13 @@ export function localDate(date = new Date()) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+// Epoch ms of the last moment of the learner's local day.
+export function endOfLocalDay(date = new Date()) {
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+  return end.getTime();
+}
+
 // Applies time-based refill. `updatedAt` marks when the refill clock started.
 export function refillHearts({ hearts, updatedAt }, now = Date.now()) {
   const current = Math.min(MAX_HEARTS, Math.max(0, hearts ?? MAX_HEARTS));

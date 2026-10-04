@@ -1,20 +1,18 @@
 // saflash — Quiz session for a path lesson: intro new cards, then quiz them.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getLessonCards, completeLesson } from '../database/lessonsRepository';
-import { getProgress, upsertProgress, getDistractorCards } from '../database/progressRepository';
+import { answerCard, getDistractorCards } from '../database/progressRepository';
 import {
   saveSession, incrementTotalStudied, updateStreak, setCurrentLesson, getConfig, getHearts, addHearts,
 } from '../database/sessionRepository';
-import { calculateNextReview, getDefaultProgress } from '../services/spacedRepetition';
+import { GRADE } from '../services/srs.mjs';
 import { scoreLesson } from '../services/lessonScoring.mjs';
 import { planSession, retryExercise, checkAnswer, toCard } from '../services/quiz.mjs';
 import { xpForSession } from '../services/gamification.mjs';
-import { RATING } from '../utils/constants';
 
-async function recordAnswer(card, correct) {
-  const progress = await getProgress(card.type, card.id);
-  const rating = correct ? RATING.MEDIUM : RATING.HARD;
-  await upsertProgress(card.type, card.id, calculateNextReview(progress || getDefaultProgress(), rating));
+// The first answer to each card schedules it with FSRS.
+function recordAnswer(card, correct, retention) {
+  return answerCard(card, correct ? GRADE.GOOD : GRADE.AGAIN, { retention, source: 'lesson' });
 }
 
 export function useLessonSession(lessonId) {
@@ -30,12 +28,14 @@ export function useLessonSession(lessonId) {
   const pool = useRef([]);
   const results = useRef(new Map()); // card key -> first-try correct
   const sessionStart = useRef(Date.now());
+  const retention = useRef(undefined);
 
   const load = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const [config, heartState] = await Promise.all([getConfig(), getHearts()]);
+      retention.current = config?.desired_retention || undefined;
       setHearts(heartState);
       setOutOfHearts(heartState.hearts === 0);
       const [rows, distractors] = await Promise.all([
@@ -96,7 +96,7 @@ export function useLessonSession(lessonId) {
     const { card } = step;
     if (!results.current.has(card.key)) {
       results.current.set(card.key, correct);
-      recordAnswer(card, correct).catch(err => console.error('Error saving progress:', err));
+      recordAnswer(card, correct, retention.current).catch(err => console.error('Error saving progress:', err));
     }
     if (correct) {
       setCombo(c => {

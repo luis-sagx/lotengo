@@ -48,7 +48,7 @@ export default function ReviewSessionScreen({ navigation }) {
         </View>
       ) : (
         <View style={styles.center}>
-          <FlashCard card={session.card} onRate={session.rate} />
+          <FlashCard card={session.card} onRate={session.rate} intervals={session.intervals} />
           <Text style={styles.hint}>Toca la tarjeta para ver la respuesta y califica qué tan bien la sabías</Text>
         </View>
       )}

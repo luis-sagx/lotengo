@@ -48,13 +48,13 @@ export default function SessionSummary({ correct = 0, wrong = 0, stars = null, x
         )}
 
         <Animated.View entering={FadeInDown.delay(900)} style={styles.ratingsRow}>
-          <View style={[styles.ratingPill, { backgroundColor: Rating.easy + '20' }]}>
-            <Ionicons name="checkmark-circle" size={16} color={Rating.easy} />
-            <Text style={[styles.ratingText, { color: Rating.easy }]}>{correct} a la primera</Text>
+          <View style={[styles.ratingPill, { backgroundColor: Rating.good + '20' }]}>
+            <Ionicons name="checkmark-circle" size={16} color={Rating.good} />
+            <Text style={[styles.ratingText, { color: Rating.good }]}>{correct} a la primera</Text>
           </View>
-          <View style={[styles.ratingPill, { backgroundColor: Rating.hard + '20' }]}>
-            <Ionicons name="refresh-circle" size={16} color={Rating.hard} />
-            <Text style={[styles.ratingText, { color: Rating.hard }]}>{wrong} a repasar</Text>
+          <View style={[styles.ratingPill, { backgroundColor: Rating.again + '20' }]}>
+            <Ionicons name="refresh-circle" size={16} color={Rating.again} />
+            <Text style={[styles.ratingText, { color: Rating.again }]}>{wrong} a repasar</Text>
           </View>
         </Animated.View>
 

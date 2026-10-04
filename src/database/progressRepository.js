@@ -1,5 +1,6 @@
-// saflash — User progress repository (SM-2 tracking)
+// saflash — User progress repository (FSRS card state + review log)
 import { getDatabase } from './database';
+import { review, MATURE_DAYS } from '../services/srs.mjs';
 
 export async function getProgress(cardType, cardId) {
   const db = getDatabase();
@@ -9,39 +10,51 @@ export async function getProgress(cardType, cardId) {
   );
 }
 
-export async function upsertProgress(cardType, cardId, progress) {
+const PROGRESS_FIELDS = [
+  'state', 'due', 'stability', 'difficulty', 'elapsed_days', 'scheduled_days',
+  'learning_steps', 'reps', 'lapses', 'last_review', 'correct_count', 'wrong_count',
+];
+
+// Schedules `card` with `grade` and logs the answer. Returns the new progress.
+export async function answerCard(card, grade, { retention, durationMs = null, source = 'review' } = {}) {
   const db = getDatabase();
-  await db.runAsync(
-    `INSERT INTO user_progress
-      (card_type, card_id, status, ease_factor, interval_days, repetitions, next_review, last_review, correct_count, wrong_count)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-     ON CONFLICT(card_type, card_id) DO UPDATE SET
-       status = excluded.status, ease_factor = excluded.ease_factor,
-       interval_days = excluded.interval_days, repetitions = excluded.repetitions,
-       next_review = excluded.next_review, last_review = excluded.last_review,
-       correct_count = excluded.correct_count, wrong_count = excluded.wrong_count`,
-    [
-      cardType, cardId,
-      progress.status, progress.ease_factor, progress.interval_days,
-      progress.repetitions, progress.next_review, progress.last_review,
-      progress.correct_count, progress.wrong_count,
-    ]
-  );
+  const current = await getProgress(card.type, card.id);
+  const { progress, log } = review(current, grade, { retention });
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      `INSERT INTO user_progress (card_type, card_id, ${PROGRESS_FIELDS.join(', ')})
+       VALUES (?, ?, ${PROGRESS_FIELDS.map(() => '?').join(', ')})
+       ON CONFLICT(card_type, card_id) DO UPDATE SET
+         ${PROGRESS_FIELDS.map(f => `${f} = excluded.${f}`).join(', ')}`,
+      [card.type, card.id, ...PROGRESS_FIELDS.map(f => progress[f])]
+    );
+    await db.runAsync(
+      `INSERT INTO review_log
+        (card_type, card_id, rating, state, reviewed_at, elapsed_days, scheduled_days,
+         stability, difficulty, duration_ms, source)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        card.type, card.id, log.rating, log.state, log.reviewed_at, log.elapsed_days,
+        log.scheduled_days, log.stability, log.difficulty, durationMs, source,
+      ]
+    );
+  });
+  return progress;
 }
 
+// Learning = learning/relearning steps; reviewing = in review but not mature yet;
+// known = mature (stability of at least MATURE_DAYS).
 export async function getStudyStats() {
   const db = getDatabase();
   const stats = await db.getFirstAsync(`
     SELECT
-      SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) as new_count,
-      SUM(CASE WHEN status = 'learning' THEN 1 ELSE 0 END) as learning_count,
-      SUM(CASE WHEN status = 'reviewing' THEN 1 ELSE 0 END) as reviewing_count,
-      SUM(CASE WHEN status = 'known' THEN 1 ELSE 0 END) as known_count,
+      SUM(CASE WHEN state IN (1, 3) THEN 1 ELSE 0 END) as learning_count,
+      SUM(CASE WHEN state = 2 AND stability < ? THEN 1 ELSE 0 END) as reviewing_count,
+      SUM(CASE WHEN state = 2 AND stability >= ? THEN 1 ELSE 0 END) as known_count,
       COUNT(*) as total_tracked
     FROM user_progress
-  `);
+  `, [MATURE_DAYS, MATURE_DAYS]);
   return {
-    newCount: stats.new_count || 0,
     learningCount: stats.learning_count || 0,
     reviewingCount: stats.reviewing_count || 0,
     knownCount: stats.known_count || 0,
@@ -49,11 +62,12 @@ export async function getStudyStats() {
   };
 }
 
-export async function getTotalDueCount() {
+// Cards due before `until` (epoch ms; usually the end of the learner's day).
+export async function getTotalDueCount(until) {
   const db = getDatabase();
   const result = await db.getFirstAsync(
-    `SELECT COUNT(*) as count FROM user_progress
-     WHERE next_review <= date('now') AND status NOT IN ('new', 'known')`
+    'SELECT COUNT(*) as count FROM user_progress WHERE due <= ?',
+    [until]
   );
   return result.count || 0;
 }
@@ -65,7 +79,7 @@ export async function searchCards(query, limit = 50) {
   const term = query.trim();
   if (!term) {
     return db.getAllAsync(
-      `SELECT up.card_type, up.card_id AS id, up.status,
+      `SELECT up.card_type, up.card_id AS id, up.state,
               COALESCE(w.english_word, p.phrase_en) AS en,
               COALESCE(w.spanish_trans, p.phrase_es) AS es
        FROM user_progress up
@@ -96,23 +110,29 @@ const CARD_COLUMNS = `
   w.phonetic, w.example_en, w.example_es, w.image_url, w.enriched, w.definition_en, p.context,
   COALESCE(w.category, p.category) AS category`;
 
-// Due cards first; with nothing due, practice recently studied cards instead.
-export async function getDueCards(limit = 15) {
+const CARD_JOIN = `
+  FROM user_progress up
+  LEFT JOIN words w ON up.card_type = 'word' AND w.id = up.card_id
+  LEFT JOIN phrases p ON up.card_type = 'phrase' AND p.id = up.card_id`;
+
+// Cards due before `until`, most overdue first, with their progress row.
+export async function getDueCards(until, limit = 200) {
   const db = getDatabase();
-  const select = `SELECT up.card_type, up.card_id AS id, ${CARD_COLUMNS}
-     FROM user_progress up
-     LEFT JOIN words w ON up.card_type = 'word' AND w.id = up.card_id
-     LEFT JOIN phrases p ON up.card_type = 'phrase' AND p.id = up.card_id`;
-  const due = await db.getAllAsync(
-    `${select}
-     WHERE up.next_review <= date('now') AND up.status NOT IN ('new', 'known')
-     ORDER BY up.next_review
-     LIMIT ?`,
-    [limit]
-  );
-  if (due.length) return due;
   return db.getAllAsync(
-    `${select}
+    `SELECT up.*, up.card_type, up.card_id AS id, ${CARD_COLUMNS} ${CARD_JOIN}
+     WHERE up.due <= ?
+     ORDER BY up.due
+     LIMIT ?`,
+    [until, limit]
+  );
+}
+
+// Extra practice when nothing is due: recently studied cards. Practice never
+// changes the schedule.
+export async function getPracticeCards(limit = 20) {
+  const db = getDatabase();
+  return db.getAllAsync(
+    `SELECT up.card_type, up.card_id AS id, ${CARD_COLUMNS} ${CARD_JOIN}
      WHERE up.last_review IS NOT NULL
      ORDER BY up.last_review DESC, RANDOM()
      LIMIT ?`,
@@ -141,11 +161,11 @@ export async function getAchievementStats() {
   const db = getDatabase();
   const row = await db.getFirstAsync(`
     SELECT
-      (SELECT COUNT(*) FROM user_progress WHERE card_type = 'word' AND status = 'known') AS known_words,
-      (SELECT COUNT(*) FROM user_progress WHERE card_type = 'phrase' AND status = 'known') AS known_phrases,
+      (SELECT COUNT(*) FROM user_progress WHERE card_type = 'word' AND state = 2 AND stability >= ?) AS known_words,
+      (SELECT COUNT(*) FROM user_progress WHERE card_type = 'phrase' AND state = 2 AND stability >= ?) AS known_phrases,
       EXISTS (SELECT 1 FROM study_sessions
               WHERE session_type = 'lesson' AND cards_studied > 0 AND cards_correct = cards_studied) AS perfect
-  `);
+  `, [MATURE_DAYS, MATURE_DAYS]);
   return {
     knownWords: row?.known_words || 0,
     knownPhrases: row?.known_phrases || 0,
