@@ -1,6 +1,6 @@
 // saflash — Progress/stats hook
 import { useState, useCallback } from 'react';
-import { getStudyStats } from '../database/progressRepository';
+import { getStudyStats, getAchievementStats } from '../database/progressRepository';
 import { getConfig, getWeekStats, getTodayXp, getHearts } from '../database/sessionRepository';
 import { getTotalWordsCount } from '../database/wordsRepository';
 import { getTotalPhrasesCount } from '../database/phrasesRepository';
@@ -36,6 +36,7 @@ export function useProgress() {
         weekData,
         totalWords,
         totalPhrases,
+        achievementStats,
       ] = await Promise.all([
         getStudyStats(),
         getTodayXp(),
@@ -44,14 +45,14 @@ export function useProgress() {
         getWeekStats(),
         getTotalWordsCount(),
         getTotalPhrasesCount(),
+        getAchievementStats(),
       ]);
 
       const currentStats = {
-        knownWords: studyStats.knownCount || 0,
-        knownPhrases: 0, // Will be calculated separately if needed
+        ...achievementStats,
         streak: config?.streak_days || 0,
         totalStudied: config?.total_studied || 0,
-        perfectSession: false,
+        xpTotal: config?.xp_total || 0,
       };
 
       setStreakDays(currentStats.streak);

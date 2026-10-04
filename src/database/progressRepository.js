@@ -136,3 +136,19 @@ export async function getDistractorCards(level, limit = 24) {
     [level, limit, level, Math.ceil(limit / 3)]
   );
 }
+
+export async function getAchievementStats() {
+  const db = getDatabase();
+  const row = await db.getFirstAsync(`
+    SELECT
+      (SELECT COUNT(*) FROM user_progress WHERE card_type = 'word' AND status = 'known') AS known_words,
+      (SELECT COUNT(*) FROM user_progress WHERE card_type = 'phrase' AND status = 'known') AS known_phrases,
+      EXISTS (SELECT 1 FROM study_sessions
+              WHERE session_type = 'lesson' AND cards_studied > 0 AND cards_correct = cards_studied) AS perfect
+  `);
+  return {
+    knownWords: row?.known_words || 0,
+    knownPhrases: row?.known_phrases || 0,
+    perfectSession: row?.perfect === 1,
+  };
+}
