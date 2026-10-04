@@ -5,7 +5,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../theme/colors';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
-import { WORDS_BY_LEVEL } from '../seeds/words/index.mjs';
 import { buildPlacementQuestions, scorePlacement } from '../services/placementService.mjs';
 import { setCurrentLesson, setLevel, setOnboardingDone, setPlacementDone } from '../database/sessionRepository';
 import { getFirstLessonForLevel, unlockUpTo } from '../database/lessonsRepository';
@@ -13,7 +12,7 @@ import useAppStore from '../store/appStore';
 
 export default function PlacementTestScreen({ navigation, route }) {
   const mode = route.params?.mode || 'onboarding';
-  const questions = useMemo(() => buildPlacementQuestions(WORDS_BY_LEVEL), []);
+  const questions = useMemo(() => buildPlacementQuestions(), []);
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const setOnboardingDoneStore = useAppStore(s => s.setOnboardingDone);
@@ -40,7 +39,7 @@ export default function PlacementTestScreen({ navigation, route }) {
   };
 
   const answer = async (option) => {
-    const correct = option === question.answer;
+    const correct = option !== null && option === question.answer;
     const nextAnswers = {
       ...answers,
       [question.level]: [...(answers[question.level] || []), correct],
@@ -70,6 +69,9 @@ export default function PlacementTestScreen({ navigation, route }) {
             <Text style={styles.optionText}>{option}</Text>
           </TouchableOpacity>
         ))}
+        <TouchableOpacity style={styles.skip} onPress={() => answer(null)}>
+          <Text style={styles.skipText}>No sé</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -111,6 +113,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderSage,
     padding: SPACING.base,
+  },
+  skip: {
+    alignItems: 'center',
+    padding: SPACING.base,
+    marginTop: SPACING.sm,
+  },
+  skipText: {
+    fontFamily: FONT_FAMILY.semiBold,
+    fontSize: 15,
+    color: COLORS.textPlaceholder,
   },
   optionText: {
     fontFamily: FONT_FAMILY.semiBold,

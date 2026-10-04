@@ -29,6 +29,10 @@ test('moves between adjacent levels and stops at bounds', () => {
   assert.equal(prevLevel('bad'), null);
 });
 
+test('uses friendly labels without CEFR codes', () => {
+  assert.deepEqual(Object.values(LEVEL_LABELS), ['Principiante', 'Básico', 'Intermedio', 'Avanzado', 'Experto']);
+});
+
 test('keeps labels for every selectable and valid level', () => {
   for (const level of LEVELS) {
     assert.equal(isValidLevel(level), true);
@@ -38,6 +42,5 @@ test('keeps labels for every selectable and valid level', () => {
 
   for (const level of Object.keys(LEVEL_SELF_DESCRIPTIONS)) {
     assert.ok(LEVELS.includes(level));
-    assert.notEqual(level, 'C1');
   }
 });

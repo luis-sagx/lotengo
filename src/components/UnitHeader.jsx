@@ -4,6 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, unitColor } from '../theme/colors';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
+import { LEVEL_LABELS } from '../utils/constants';
 
 export const UNIT_HEADER_HEIGHT = 104;
 
@@ -15,7 +16,7 @@ function UnitHeader({ unit, number }) {
     <View style={styles.wrap}>
       <View style={[styles.banner, { backgroundColor: unitColor(unit.unit_index) }]}>
         <View style={styles.copy}>
-          <Text style={[styles.kicker, ink]}>{unit.level} · UNIDAD {number}</Text>
+          <Text style={[styles.kicker, ink]}>{LEVEL_LABELS[unit.level].toUpperCase()} · UNIDAD {number}</Text>
           <Text style={[styles.title, ink]} numberOfLines={1}>{unit.unit_title}</Text>
           <Text style={[styles.count, ink]}>{done} / {unit.lessons.length} lecciones</Text>
         </View>

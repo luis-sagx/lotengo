@@ -1,4 +1,4 @@
-// saflash — CEFR level picker for onboarding and settings.
+// saflash — Level picker for onboarding and settings.
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,13 @@ import { unlockUpTo, getFirstLessonForLevel } from '../database/lessonsRepositor
 import useAppStore from '../store/appStore';
 
 const PICK_LEVELS = Object.keys(LEVEL_SELF_DESCRIPTIONS);
+const LEVEL_ICONS = {
+  A1: 'leaf-outline',
+  A2: 'book-outline',
+  B1: 'chatbubbles-outline',
+  B2: 'rocket-outline',
+  C1: 'trophy-outline',
+};
 
 export default function LevelPickScreen({ navigation, route }) {
   const mode = route.params?.mode || 'onboarding';
@@ -60,11 +67,11 @@ export default function LevelPickScreen({ navigation, route }) {
             activeOpacity={0.8}
           >
             <View style={[styles.levelBadge, { backgroundColor: DifficultyColors[level] }]}>
-              <Text style={styles.levelBadgeText}>{level}</Text>
+              <Ionicons name={LEVEL_ICONS[level]} size={24} color={COLORS.surfaceWhite} />
             </View>
             <View style={styles.optionCopy}>
-              <Text style={styles.optionTitle}>{LEVEL_SELF_DESCRIPTIONS[level]}</Text>
-              <Text style={styles.optionSubtitle}>{LEVEL_LABELS[level]}</Text>
+              <Text style={styles.optionTitle}>{LEVEL_LABELS[level]}</Text>
+              <Text style={styles.optionSubtitle}>{LEVEL_SELF_DESCRIPTIONS[level]}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={COLORS.textPlaceholder} />
           </TouchableOpacity>

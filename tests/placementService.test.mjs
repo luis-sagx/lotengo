@@ -1,87 +1,41 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildPlacementQuestions, scorePlacement } from '../src/services/placementService.mjs';
+import { LEVELS } from '../src/utils/levels.mjs';
 
-function word(english_word, spanish_trans, category, difficulty) {
-  return { english_word, spanish_trans, category, difficulty, frequency_rank: 1 };
-}
+const questions = buildPlacementQuestions();
+const T = [true, true, true];
+const F = [false, false, false];
 
-const wordsByLevel = {
-  A1: [
-    word('hello', 'hola', 'greetings', 'A1'),
-    word('bye', 'chau', 'greetings', 'A1'),
-    word('please', 'por favor', 'greetings', 'A1'),
-    word('thanks', 'gracias', 'greetings', 'A1'),
-  ],
-  A2: [
-    word('shirt', 'camisa', 'clothing', 'A2'),
-    word('pants', 'pantalón', 'clothing', 'A2'),
-    word('coat', 'abrigo', 'clothing', 'A2'),
-    word('shoe', 'zapato', 'clothing', 'A2'),
-  ],
-  B1: [
-    word('airport', 'aeropuerto', 'travel', 'B1'),
-    word('ticket', 'boleto', 'travel', 'B1'),
-    word('luggage', 'equipaje', 'travel', 'B1'),
-    word('flight', 'vuelo', 'travel', 'B1'),
-  ],
-  B2: [
-    word('loan', 'préstamo', 'money_banking', 'B2'),
-    word('debt', 'deuda', 'money_banking', 'B2'),
-    word('savings', 'ahorros', 'money_banking', 'B2'),
-    word('fee', 'cargo', 'money_banking', 'B2'),
-  ],
-  C1: [
-    word('lawsuit', 'demanda', 'law_government', 'C1'),
-    word('verdict', 'veredicto', 'law_government', 'C1'),
-    word('statute', 'estatuto', 'law_government', 'C1'),
-    word('plaintiff', 'demandante', 'law_government', 'C1'),
-  ],
-};
-
-test('builds two placement questions per level with four options', () => {
-  const questions = buildPlacementQuestions(wordsByLevel);
-
-  assert.equal(questions.length, 10);
-  assert.equal(questions.filter(q => q.level === 'A1').length, 2);
-  assert.equal(questions[0].options.length, 4);
-  assert.ok(questions[0].options.includes(questions[0].answer));
+test('builds 15 questions, 3 per level, easy to hard, answer among options', () => {
+  assert.equal(questions.length, 15);
+  assert.deepEqual(questions.map(q => q.level), LEVELS.flatMap(l => [l, l, l]));
+  for (const q of questions) {
+    assert.equal(q.options.length, 3);
+    assert.ok(q.options.includes(q.answer));
+  }
 });
 
-test('scores the highest contiguous level with at least one correct answer', () => {
-  const answers = {
-    A1: [true, false],
-    A2: [true, false],
-    B1: [false, false],
-    B2: [true, true],
-    C1: [true, true],
-  };
-
-  assert.equal(scorePlacement(answers), 'A2');
+test('answers are unique and options are unique per item', () => {
+  assert.equal(new Set(questions.map(q => q.answer)).size, 15);
+  for (const q of questions) assert.equal(new Set(q.options).size, q.options.length);
 });
 
-test('scores A1 when there are no correct answers', () => {
-  assert.equal(scorePlacement({ A1: [false, false], A2: [false, false] }), 'A1');
+test('needs 2 of 3 correct to pass a level', () => {
+  assert.equal(scorePlacement({ A1: [true, false, false] }), 'A1');
+  assert.equal(scorePlacement({ A1: T, A2: [true, false, true] }), 'A2');
+  assert.equal(scorePlacement({ A1: T, A2: [true, false, false] }), 'A1');
 });
 
-test('scores C1 when every level in the chain is passed', () => {
-  assert.equal(scorePlacement({
-    A1: [true, true],
-    A2: [true, false],
-    B1: [true, false],
-    B2: [true, false],
-    C1: [true, false],
-  }), 'C1');
+test('all wrong / all "No sé" lands in A1', () => {
+  assert.equal(scorePlacement({ A1: F, A2: F, B1: F, B2: F, C1: F }), 'A1');
+  assert.equal(scorePlacement({}), 'A1');
 });
 
-test('skips questions for a level without enough answer options', () => {
-  const sparse = {
-    A1: [word('yes', 'sí', 'basics', 'A1')],
-    A2: [],
-    B1: [],
-    B2: [],
-    C1: [],
-  };
+test('stops at the first failed level even if higher ones are right', () => {
+  assert.equal(scorePlacement({ A1: T, A2: T, B1: F, B2: T, C1: T }), 'A2');
+});
 
-  assert.deepEqual(buildPlacementQuestions(sparse), []);
+test('passing everything gives C1', () => {
+  assert.equal(scorePlacement({ A1: T, A2: T, B1: T, B2: T, C1: T }), 'C1');
 });

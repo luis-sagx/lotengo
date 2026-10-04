@@ -64,7 +64,7 @@ export default function SettingsScreen({ navigation }) {
             <View style={styles.settingInfo}>
               <Ionicons name="school" size={22} color={COLORS.oliveInk} />
               <Text style={styles.settingLabel}>
-                {config?.level || 'A1'} · {LEVEL_LABELS[config?.level || 'A1']}
+                {LEVEL_LABELS[config?.level || 'A1']}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={COLORS.textPlaceholder} />

@@ -6,15 +6,16 @@ export const LEVEL_LABELS = {
   A1: 'Principiante',
   A2: 'Básico',
   B1: 'Intermedio',
-  B2: 'Intermedio alto',
-  C1: 'Avanzado',
+  B2: 'Avanzado',
+  C1: 'Experto',
 };
 
 export const LEVEL_SELF_DESCRIPTIONS = {
-  A1: 'Nunca estudié inglés',
-  A2: 'Sé lo básico',
-  B1: 'Me defiendo',
-  B2: 'Nivel alto',
+  A1: 'Estoy empezando desde cero',
+  A2: 'Entiendo frases simples',
+  B1: 'Me defiendo en el día a día',
+  B2: 'Converso con soltura',
+  C1: 'Casi como un nativo',
 };
 
 export function levelIndex(level) {
