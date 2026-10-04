@@ -190,7 +190,7 @@ export default function SettingsScreen({ navigation }) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Acerca de</Text>
           <View style={styles.aboutCard}>
-            <Text style={styles.aboutApp}>saflash</Text>
+            <Text style={styles.aboutApp}>LoTengo</Text>
             <Text style={styles.aboutVersion}>Versión 1.0.0</Text>
             <Text style={styles.aboutDescription}>
               Aprende vocabulario en inglés con repetición espaciada (FSRS) y recuerdo activo.
