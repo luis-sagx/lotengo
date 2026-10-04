@@ -64,12 +64,6 @@ export async function persistCurriculum(plannedLessons) {
   return created;
 }
 
-export async function getLessonCount() {
-  const db = getDatabase();
-  const row = await db.getFirstAsync('SELECT COUNT(*) as count FROM lessons');
-  return row?.count ?? 0;
-}
-
 export function getPath(level) {
   if (!LEVELS.includes(level)) return Promise.resolve([]);
   if (pathCache.has(level)) return pathCache.get(level);

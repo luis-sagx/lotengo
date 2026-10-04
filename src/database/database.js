@@ -3,6 +3,13 @@ import * as SQLite from 'expo-sqlite';
 
 let db = null;
 
+// Bump when seed content or the path changes: older databases are rebuilt.
+export const CONTENT_VERSION = 2;
+const TABLES = [
+  'lesson_progress', 'lesson_cards', 'lessons', 'user_progress',
+  'study_sessions', 'user_config', 'words', 'phrases',
+];
+
 export async function openDatabase() {
   if (db) return db;
   db = await SQLite.openDatabaseAsync('saflash.db');
@@ -23,6 +30,11 @@ export async function initDatabase() {
     PRAGMA journal_mode = WAL;
     PRAGMA foreign_keys = ON;
   `);
+
+  const { user_version: version } = await database.getFirstAsync('PRAGMA user_version');
+  if (version !== CONTENT_VERSION) {
+    await database.execAsync(TABLES.map(t => `DROP TABLE IF EXISTS ${t};`).join('\n'));
+  }
 
   // ── Words table ───────────────────────────
   await database.execAsync(`
@@ -175,7 +187,11 @@ export async function initDatabase() {
     );
   }
 
-  return database;
+  return { database, needsSeed: version !== CONTENT_VERSION };
+}
+
+export async function markSeeded() {
+  await getDatabase().execAsync(`PRAGMA user_version = ${CONTENT_VERSION}`);
 }
 
 /**

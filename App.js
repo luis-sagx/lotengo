@@ -13,7 +13,7 @@ import {
   Nunito_700Bold,
 } from '@expo-google-fonts/nunito';
 import { initDatabase } from './src/database/database';
-import { runSeedsIfNeeded } from './src/seeds/seedRunner';
+import { runSeeds } from './src/seeds/seedRunner';
 import AppNavigator from './src/navigation/AppNavigator';
 import { COLORS } from './src/theme/colors';
 
@@ -32,8 +32,8 @@ export default function App() {
   useEffect(() => {
     async function bootstrap() {
       try {
-        await initDatabase();
-        await runSeedsIfNeeded();
+        const { needsSeed } = await initDatabase();
+        if (needsSeed) await runSeeds();
         setDbReady(true);
       } catch (err) {
         console.error('Error initializing app:', err);

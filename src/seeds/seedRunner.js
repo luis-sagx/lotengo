@@ -1,15 +1,17 @@
 // saflash — Seed runner: populates SQLite and builds the lesson path.
-import { getDatabase } from '../database/database';
+import { getDatabase, markSeeded } from '../database/database';
 import { LEVELS } from '../utils/levels.mjs';
 import { WORDS_BY_LEVEL } from './words/index.mjs';
 import { PHRASES_BY_LEVEL } from './phrases/index.mjs';
-import { CURRICULUM } from '../curriculum/curriculum.mjs';
 import { planLessons } from '../curriculum/curriculumBuilder.mjs';
-import { persistCurriculum, getLessonCount } from '../database/lessonsRepository';
+import { persistCurriculum } from '../database/lessonsRepository';
+import { formatCategoryName } from '../utils/formatters';
+import { getCategoryEmoji } from '../utils/emojiMap';
 
 const BATCH = 100;
 
-export async function runSeedsIfNeeded() {
+// Runs only on a fresh or rebuilt database (see CONTENT_VERSION).
+export async function runSeeds() {
   const db = getDatabase();
 
   for (const level of LEVELS) {
@@ -17,7 +19,8 @@ export async function runSeedsIfNeeded() {
     await seedPhrasesForLevel(db, level);
   }
 
-  await buildPathIfNeeded();
+  await buildPath();
+  await markSeeded();
 }
 
 async function seedWordsForLevel(db, level) {
@@ -84,14 +87,11 @@ async function seedPhrasesForLevel(db, level) {
   });
 }
 
-async function buildPathIfNeeded() {
-  const count = await getLessonCount();
-  if (count > 0) return;
-
-  const { lessons, warnings } = planLessons(CURRICULUM, WORDS_BY_LEVEL, PHRASES_BY_LEVEL);
-  for (const warning of warnings) {
-    console.warn(`Curriculum: ${warning}`);
-  }
+async function buildPath() {
+  const { lessons } = planLessons(WORDS_BY_LEVEL, PHRASES_BY_LEVEL, {
+    titleOf: formatCategoryName,
+    iconOf: getCategoryEmoji,
+  });
 
   const created = await persistCurriculum(lessons);
   console.log(`Path built: ${created} lessons`);

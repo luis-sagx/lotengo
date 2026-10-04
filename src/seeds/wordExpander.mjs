@@ -86,7 +86,7 @@ export function guessPhonetic(word) {
     great: '/ɡreɪt/', man: '/mæn/', woman: '/ˈwʊmən/',
     water: '/ˈwɔːtər/', food: '/fuːd/',
   };
-  return map[word.toLowerCase()] || `/${word}/`;
+  return map[word.toLowerCase()] || null;
 }
 
 export function makeExample(en, es) {

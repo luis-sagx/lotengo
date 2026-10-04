@@ -1,22 +1,19 @@
 // saflash — Phrase seed index: concatenates levels and assigns frequency ranks.
 import { LEVELS } from '../../utils/levels.mjs';
 import { expandPhrase } from '../wordExpander.mjs';
-import { withSupplementalPhrases } from '../supplementalContent.mjs';
 import { A1_PHRASES } from './a1.mjs';
 import { A2_PHRASES } from './a2.mjs';
 import { B1_PHRASES } from './b1.mjs';
 import { B2_PHRASES } from './b2.mjs';
 import { C1_PHRASES } from './c1.mjs';
 
-const BASE_PHRASES_COMPACT_BY_LEVEL = {
+export const PHRASES_COMPACT_BY_LEVEL = {
   A1: A1_PHRASES,
   A2: A2_PHRASES,
   B1: B1_PHRASES,
   B2: B2_PHRASES,
   C1: C1_PHRASES,
 };
-
-export const PHRASES_COMPACT_BY_LEVEL = withSupplementalPhrases(BASE_PHRASES_COMPACT_BY_LEVEL);
 
 function build() {
   const byLevel = {};
