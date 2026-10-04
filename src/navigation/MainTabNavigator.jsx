@@ -4,16 +4,18 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { FONT_FAMILY } from '../theme/typography';
+import TodayScreen from '../screens/TodayScreen';
 import PathScreen from '../screens/PathScreen';
-import ReviewScreen from '../screens/ReviewScreen';
+import DictionaryScreen from '../screens/DictionaryScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
 
 const TAB_ICONS = {
-  Home: { focused: 'map', unfocused: 'map-outline' },
-  Review: { focused: 'albums', unfocused: 'albums-outline' },
+  Home: { focused: 'today', unfocused: 'today-outline' },
+  Topics: { focused: 'map', unfocused: 'map-outline' },
+  Dictionary: { focused: 'book', unfocused: 'book-outline' },
   Progress: { focused: 'bar-chart', unfocused: 'bar-chart-outline' },
   Settings: { focused: 'settings', unfocused: 'settings-outline' },
 };
@@ -44,13 +46,18 @@ export default function MainTabNavigator() {
     >
       <Tab.Screen
         name="Home"
-        component={PathScreen}
-        options={{ tabBarLabel: 'Ruta' }}
+        component={TodayScreen}
+        options={{ tabBarLabel: 'Hoy' }}
       />
       <Tab.Screen
-        name="Review"
-        component={ReviewScreen}
-        options={{ tabBarLabel: 'Repaso' }}
+        name="Topics"
+        component={PathScreen}
+        options={{ tabBarLabel: 'Temas' }}
+      />
+      <Tab.Screen
+        name="Dictionary"
+        component={DictionaryScreen}
+        options={{ tabBarLabel: 'Diccionario' }}
       />
       <Tab.Screen
         name="Progress"

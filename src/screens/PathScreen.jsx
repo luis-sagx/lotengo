@@ -1,4 +1,4 @@
-// saflash — Guided lesson path: the app's home.
+// saflash — Topics: the lesson path by category, a secondary way to study.
 import React, { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -6,10 +6,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { RADIUS, SPACING, SHADOW } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
-import { useProgress } from '../hooks/useProgress';
 import { useLessonPath } from '../hooks/useLessonPath';
 import useAppStore from '../store/appStore';
-import HomeHeader from '../components/HomeHeader';
+import ScreenHeader from '../components/ScreenHeader';
 import UnitHeader, { UNIT_HEADER_HEIGHT } from '../components/UnitHeader';
 import LessonNode, { LESSON_NODE_HEIGHT } from '../components/LessonNode';
 import LoadingCard from '../components/LoadingCard';
@@ -35,19 +34,16 @@ function buildRows(units) {
 }
 
 export default function PathScreen({ navigation }) {
-  const progress = useProgress();
   const { units, unitsLevel, currentLesson, config, visibleLevel, loading, error, refresh, showLevel } = useLessonPath();
   const listRef = useRef(null);
   const scrolledFor = useRef(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const setStoreLevel = useAppStore(s => s.setLevel);
-  const goal = useAppStore(s => s.dailyGoal) || progress.dailyGoal || 20;
 
   useFocusEffect(
     useCallback(() => {
       refresh();
-      progress.refresh();
-    }, [refresh, progress.refresh])
+    }, [refresh])
   );
 
   const needsLevel = config && config.placement_done !== 1;
@@ -101,12 +97,7 @@ export default function PathScreen({ navigation }) {
 
   const header = (
     <View onLayout={e => setHeaderHeight(e.nativeEvent.layout.height)}>
-      <HomeHeader
-        streak={progress.streak}
-        todayXp={progress.todayXp}
-        goal={goal}
-        hearts={progress.hearts}
-      />
+      <ScreenHeader title="Temas" subtitle="Aprende las palabras de un tema concreto" />
 
       {needsLevel && (
         <View style={styles.pickPanel}>

@@ -10,6 +10,13 @@ export function localDate(date = new Date()) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+// Epoch ms of the start of the learner's local day.
+export function startOfLocalDay(date = new Date()) {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  return start.getTime();
+}
+
 // Epoch ms of the last moment of the learner's local day.
 export function endOfLocalDay(date = new Date()) {
   const end = new Date(date);

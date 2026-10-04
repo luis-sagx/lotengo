@@ -1,14 +1,13 @@
-// saflash — Review tab: due cards plus a searchable dictionary.
-import React, { useCallback, useEffect, useState } from 'react';
+// saflash — Dictionary tab: search every word and phrase, or browse recent ones.
+import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
-import { RADIUS, SPACING, SHADOW } from '../theme/spacing';
+import { SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import ScreenHeader from '../components/ScreenHeader';
 import SearchBar from '../components/SearchBar';
-import { getTotalDueCount, getStudyStats, searchCards } from '../database/progressRepository';
+import { searchCards } from '../database/progressRepository';
 import { speak } from '../services/audioService';
 import StatusBarScrim from '../components/StatusBarScrim';
 
@@ -35,18 +34,9 @@ const renderItem = ({ item }) => <DictionaryRow item={item} />;
 const keyExtractor = item => `${item.card_type}-${item.id}`;
 const getItemLayout = (_, index) => ({ length: ROW_HEIGHT, offset: ROW_HEIGHT * index, index });
 
-export default function ReviewScreen({ navigation }) {
-  const [due, setDue] = useState(0);
-  const [studied, setStudied] = useState(0);
+export default function DictionaryScreen() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
-
-  useFocusEffect(
-    useCallback(() => {
-      getTotalDueCount().then(setDue).catch(() => setDue(0));
-      getStudyStats().then(s => setStudied(s.totalTracked)).catch(() => setStudied(0));
-    }, [])
-  );
 
   useEffect(() => {
     let alive = true;
@@ -63,25 +53,7 @@ export default function ReviewScreen({ navigation }) {
 
   const header = (
     <>
-      <ScreenHeader title="Repaso" subtitle="Refuerza lo aprendido y busca palabras" />
-      <View style={styles.dueCard}>
-        <Text style={styles.dueNumber}>{due}</Text>
-        <Text style={styles.dueLabel}>
-          {due === 1 ? 'tarjeta para repasar hoy' : 'tarjetas para repasar hoy'}
-        </Text>
-        <TouchableOpacity
-          style={[styles.reviewButton, studied === 0 && styles.reviewButtonDisabled]}
-          disabled={studied === 0}
-          onPress={() => navigation.navigate('ReviewSession')}
-        >
-          <Ionicons name="refresh" size={18} color={COLORS.surfaceWhite} />
-          <Text style={styles.reviewButtonText}>
-            {studied === 0 ? 'Completa una lección primero' : due === 0 ? 'Practicar' : 'Repasar ahora'}
-          </Text>
-        </TouchableOpacity>
-        <Text style={styles.reward}>Cada repaso completado te devuelve ❤️ 1 vida</Text>
-      </View>
-      <Text style={styles.sectionTitle}>Diccionario</Text>
+      <ScreenHeader title="Diccionario" subtitle="Busca en inglés o en español y escucha la pronunciación" />
       <SearchBar
         value={query}
         onChangeText={setQuery}
@@ -120,59 +92,6 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: SPACING.xxl,
-  },
-  dueCard: {
-    marginHorizontal: SPACING.xl,
-    padding: SPACING.lg,
-    backgroundColor: COLORS.surfaceWhite,
-    borderRadius: RADIUS.md,
-    borderWidth: 1,
-    borderColor: COLORS.borderSage,
-    alignItems: 'center',
-  },
-  dueNumber: {
-    fontFamily: FONT_FAMILY.bold,
-    fontSize: 40,
-    color: COLORS.deepOlive,
-  },
-  dueLabel: {
-    fontFamily: FONT_FAMILY.regular,
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginBottom: SPACING.base,
-  },
-  reviewButton: {
-    alignSelf: 'stretch',
-    height: 52,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.deepOlive,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: SPACING.sm,
-    ...SHADOW.button,
-  },
-  reviewButtonDisabled: {
-    backgroundColor: COLORS.textPlaceholder,
-  },
-  reviewButtonText: {
-    fontFamily: FONT_FAMILY.bold,
-    fontSize: 16,
-    color: COLORS.surfaceWhite,
-  },
-  reward: {
-    fontFamily: FONT_FAMILY.regular,
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    marginTop: SPACING.sm,
-  },
-  sectionTitle: {
-    fontFamily: FONT_FAMILY.bold,
-    fontSize: 18,
-    color: COLORS.deepOlive,
-    marginTop: SPACING.xl,
-    marginBottom: SPACING.sm,
-    paddingHorizontal: SPACING.xl,
   },
   search: {
     marginHorizontal: SPACING.xl,

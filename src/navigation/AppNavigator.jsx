@@ -10,7 +10,7 @@ import LevelPickScreen from '../screens/LevelPickScreen';
 import PlacementTestScreen from '../screens/PlacementTestScreen';
 import MainTabNavigator from './MainTabNavigator';
 import StudyLessonScreen from '../screens/StudyLessonScreen';
-import ReviewSessionScreen from '../screens/ReviewSessionScreen';
+import StudySessionScreen from '../screens/StudySessionScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -63,8 +63,8 @@ export default function AppNavigator() {
         options={{ animation: 'slide_from_bottom' }}
       />
       <Stack.Screen
-        name="ReviewSession"
-        component={ReviewSessionScreen}
+        name="StudySession"
+        component={StudySessionScreen}
         options={{ animation: 'slide_from_bottom' }}
       />
     </Stack.Navigator>

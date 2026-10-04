@@ -140,6 +140,48 @@ export async function getPracticeCards(limit = 20) {
   );
 }
 
+// Unseen cards from `level` up, easiest level and most frequent first.
+// CEFR codes sort correctly as text (A1 < A2 < B1 < B2 < C1).
+export async function getNewCards(level, limit) {
+  const db = getDatabase();
+  const [words, phrases] = await Promise.all([
+    db.getAllAsync(
+      `SELECT 'word' AS card_type, w.id, w.english_word AS en, w.spanish_trans AS es,
+              w.phonetic, w.example_en, w.example_es, w.image_url, w.enriched, w.definition_en,
+              NULL AS context, w.category
+       FROM words w
+       LEFT JOIN user_progress up ON up.card_type = 'word' AND up.card_id = w.id
+       WHERE up.id IS NULL AND w.difficulty >= ?
+       ORDER BY w.difficulty, w.frequency_rank
+       LIMIT ?`,
+      [level, limit]
+    ),
+    db.getAllAsync(
+      `SELECT 'phrase' AS card_type, p.id, p.phrase_en AS en, p.phrase_es AS es,
+              p.context, p.image_url, p.category
+       FROM phrases p
+       LEFT JOIN user_progress up ON up.card_type = 'phrase' AND up.card_id = p.id
+       WHERE up.id IS NULL AND p.difficulty >= ?
+       ORDER BY p.difficulty, p.id
+       LIMIT ?`,
+      [level, limit]
+    ),
+  ]);
+  return { words, phrases };
+}
+
+// Cards answered for the first time since `since` (epoch ms).
+export async function getNewCardsSince(since) {
+  const db = getDatabase();
+  const row = await db.getFirstAsync(
+    `SELECT COUNT(*) AS count FROM (
+       SELECT MIN(reviewed_at) AS first FROM review_log GROUP BY card_type, card_id
+     ) WHERE first >= ?`,
+    [since]
+  );
+  return row?.count || 0;
+}
+
 // Extra cards to draw wrong answers from.
 export async function getDistractorCards(level, limit = 24) {
   const db = getDatabase();

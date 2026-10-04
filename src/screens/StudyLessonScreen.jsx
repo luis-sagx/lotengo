@@ -112,7 +112,7 @@ export default function StudyLessonScreen({ navigation, route }) {
           <Text style={styles.outTitle}>Te quedaste sin vidas</Text>
           <Text style={styles.emptyText}>Recuperas una vida cada 30 minutos, o al completar un repaso.</Text>
           <HeartsBadge hearts={session.hearts} />
-          <TouchableOpacity style={styles.outPrimary} onPress={() => navigation.replace('ReviewSession')}>
+          <TouchableOpacity style={styles.outPrimary} onPress={() => navigation.replace('StudySession')}>
             <Text style={styles.outPrimaryText}>Repasar y ganar una vida</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.outSecondary} onPress={() => navigation.goBack()}>

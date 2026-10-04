@@ -1,4 +1,4 @@
-// saflash — Anki-style review session screen.
+// saflash — Daily study session: due reviews, then new cards.
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,14 +6,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
-import { useReviewSession } from '../hooks/useReviewSession';
+import { useStudySession } from '../hooks/useStudySession';
+import { EXERCISE } from '../services/quiz.mjs';
+import Exercise from '../components/Exercise';
 import FlashCard from '../components/FlashCard';
 import ProgressBar from '../components/ProgressBar';
 import LoadingCard from '../components/LoadingCard';
 import SessionSummary from '../components/SessionSummary';
 
-export default function ReviewSessionScreen({ navigation }) {
-  const session = useReviewSession();
+export default function StudySessionScreen({ navigation, route }) {
+  const session = useStudySession({ practice: route.params?.practice });
+  const { step } = session;
 
   if (session.completed) {
     return (
@@ -31,10 +34,11 @@ export default function ReviewSessionScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} accessibilityLabel="Salir del repaso">
+        <TouchableOpacity onPress={() => navigation.goBack()} accessibilityLabel="Salir de la sesión">
           <Ionicons name="close" size={28} color={COLORS.oliveInk} />
         </TouchableOpacity>
         <View style={styles.progress}>
+          {session.practice && <Text style={styles.practice}>Práctica libre · no cambia tus repasos</Text>}
           <ProgressBar current={session.index} total={Math.max(session.total, 1)} color={COLORS.successGreen} height={12} />
         </View>
         <Text style={styles.counter}>{Math.min(session.index + 1, session.total)} / {session.total}</Text>
@@ -42,15 +46,23 @@ export default function ReviewSessionScreen({ navigation }) {
 
       {session.loading ? (
         <LoadingCard />
-      ) : session.error || !session.card ? (
+      ) : session.error || !step ? (
         <View style={styles.center}>
-          <Text style={styles.message}>{session.error || 'No hay tarjetas para repasar.'}</Text>
+          <Text style={styles.message}>{session.error || 'No hay tarjetas para estudiar.'}</Text>
+        </View>
+      ) : step.type === EXERCISE.FLIP ? (
+        <View style={styles.center}>
+          <FlashCard card={step.card} onRate={session.grade} intervals={session.intervals} />
+          <Text style={styles.hint}>Intenta recordarla, toca la tarjeta y califica qué tan bien la sabías</Text>
         </View>
       ) : (
-        <View style={styles.center}>
-          <FlashCard card={session.card} onRate={session.rate} intervals={session.intervals} />
-          <Text style={styles.hint}>Toca la tarjeta para ver la respuesta y califica qué tan bien la sabías</Text>
-        </View>
+        <Exercise
+          key={`${session.index}-${step.card.key}`}
+          step={step}
+          onCheck={session.answer}
+          onNext={() => session.grade(null)}
+          grading={{ intervals: session.intervals, onGrade: session.grade }}
+        />
       )}
     </SafeAreaView>
   );
@@ -70,6 +82,12 @@ const styles = StyleSheet.create({
   },
   progress: {
     flex: 1,
+  },
+  practice: {
+    fontFamily: FONT_FAMILY.semiBold,
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    marginBottom: 2,
   },
   counter: {
     fontFamily: FONT_FAMILY.semiBold,
