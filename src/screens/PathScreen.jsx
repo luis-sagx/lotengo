@@ -102,9 +102,9 @@ export default function PathScreen({ navigation }) {
     <View onLayout={e => setHeaderHeight(e.nativeEvent.layout.height)}>
       <HomeHeader
         streak={progress.streak}
-        todayStudied={progress.todayStudied}
+        todayXp={progress.todayXp}
         goal={goal}
-        knownCount={progress.study.knownCount}
+        hearts={progress.hearts}
       />
 
       {needsLevel && (

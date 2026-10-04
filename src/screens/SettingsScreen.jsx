@@ -69,7 +69,7 @@ export default function SettingsScreen({ navigation }) {
 
       {/* Daily goal */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Meta diaria</Text>
+        <Text style={styles.sectionTitle}>Meta diaria de XP</Text>
         <View style={styles.goalOptions}>
           {DAILY_GOAL_OPTIONS.map(goal => (
             <TouchableOpacity
@@ -101,7 +101,7 @@ export default function SettingsScreen({ navigation }) {
                   },
                 ]}
               >
-                {goal} tarjetas
+                {goal} XP
               </Text>
             </TouchableOpacity>
           ))}

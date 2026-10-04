@@ -1,7 +1,7 @@
 // saflash — Progress/stats hook
 import { useState, useCallback } from 'react';
-import { getStudyStats, getTodayStats } from '../database/progressRepository';
-import { getConfig, getWeekStats } from '../database/sessionRepository';
+import { getStudyStats } from '../database/progressRepository';
+import { getConfig, getWeekStats, getTodayXp, getHearts } from '../database/sessionRepository';
 import { getTotalWordsCount } from '../database/wordsRepository';
 import { getTotalPhrasesCount } from '../database/phrasesRepository';
 import { checkAchievements } from '../utils/formatters';
@@ -10,7 +10,9 @@ import useAppStore from '../store/appStore';
 export function useProgress() {
   const [stats, setStats] = useState({
     study: { newCount: 0, learningCount: 0, reviewingCount: 0, knownCount: 0 },
-    todayStudied: 0,
+    todayXp: 0,
+    xpTotal: 0,
+    hearts: null,
     streak: 0,
     totalStudied: 0,
     dailyGoal: 20,
@@ -28,15 +30,17 @@ export function useProgress() {
     try {
       const [
         studyStats,
-        todayCards,
+        todayXp,
         config,
+        hearts,
         weekData,
         totalWords,
         totalPhrases,
       ] = await Promise.all([
         getStudyStats(),
-        getTodayStats(),
+        getTodayXp(),
         getConfig(),
+        getHearts(),
         getWeekStats(),
         getTotalWordsCount(),
         getTotalPhrasesCount(),
@@ -55,7 +59,9 @@ export function useProgress() {
 
       setStats({
         study: studyStats,
-        todayStudied: todayCards,
+        todayXp,
+        xpTotal: config?.xp_total || 0,
+        hearts,
         streak: currentStats.streak,
         totalStudied: currentStats.totalStudied,
         dailyGoal: config?.daily_goal || 20,

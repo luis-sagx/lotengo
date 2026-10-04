@@ -20,10 +20,8 @@ const { width } = Dimensions.get('window');
 export default function ProgressScreen() {
   const {
     study,
-    todayStudied,
     streak,
-    totalStudied,
-    dailyGoal,
+    xpTotal,
     totalWords,
     totalPhrases,
     achievements,
@@ -62,8 +60,8 @@ export default function ProgressScreen() {
 
       {/* Stats row */}
       <View style={styles.statsRow}>
-        <StatsCard icon="book" value={formatNumber(totalWords)} label="Palabras" color={COLORS.deepOlive} />
-        <StatsCard icon="chatbubbles" value={formatNumber(totalPhrases)} label="Frases" color={COLORS.successGreen} />
+        <StatsCard icon="flash" value={formatNumber(xpTotal)} label="XP total" color={COLORS.accentOrange} />
+        <StatsCard icon="checkmark-done" value={formatNumber(study.knownCount)} label="Dominadas" color={COLORS.successGreen} />
         <StatsCard icon="flame" value={`${streak}`} label="Días" color={COLORS.amberGold} />
       </View>
 

@@ -49,18 +49,6 @@ export async function getStudyStats() {
   };
 }
 
-export async function getTodayStats() {
-  const db = getDatabase();
-  const today = new Date().toISOString().split('T')[0];
-  const result = await db.getFirstAsync(
-    `SELECT SUM(cards_studied) as today_cards
-     FROM study_sessions
-     WHERE session_date = ?`,
-    [today]
-  );
-  return result.today_cards || 0;
-}
-
 export async function getTotalDueCount() {
   const db = getDatabase();
   const result = await db.getFirstAsync(
@@ -108,15 +96,25 @@ const CARD_COLUMNS = `
   w.phonetic, w.example_en, w.example_es, w.image_url, w.enriched,
   COALESCE(w.category, p.category) AS category`;
 
+// Due cards first; with nothing due, practice recently studied cards instead.
 export async function getDueCards(limit = 15) {
   const db = getDatabase();
-  return db.getAllAsync(
-    `SELECT up.card_type, up.card_id AS id, ${CARD_COLUMNS}
+  const select = `SELECT up.card_type, up.card_id AS id, ${CARD_COLUMNS}
      FROM user_progress up
      LEFT JOIN words w ON up.card_type = 'word' AND w.id = up.card_id
-     LEFT JOIN phrases p ON up.card_type = 'phrase' AND p.id = up.card_id
+     LEFT JOIN phrases p ON up.card_type = 'phrase' AND p.id = up.card_id`;
+  const due = await db.getAllAsync(
+    `${select}
      WHERE up.next_review <= date('now') AND up.status NOT IN ('new', 'known')
      ORDER BY up.next_review
+     LIMIT ?`,
+    [limit]
+  );
+  if (due.length) return due;
+  return db.getAllAsync(
+    `${select}
+     WHERE up.last_review IS NOT NULL
+     ORDER BY up.last_review DESC, RANDOM()
      LIMIT ?`,
     [limit]
   );

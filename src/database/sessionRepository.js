@@ -1,24 +1,39 @@
 // saflash — Sessions + config repository
 import { getDatabase } from './database';
+import { localDate, nextStreak, refillHearts, changeHearts } from '../services/gamification.mjs';
 
 // ── Study Sessions ──────────────────────────
 
 export async function saveSession(session) {
   const db = getDatabase();
+  const xp = session.xp || 0;
   await db.runAsync(
     `INSERT INTO study_sessions
-      (session_date, session_type, cards_studied, cards_correct, cards_medium, cards_hard, duration_secs)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      (session_date, session_type, cards_studied, cards_correct, cards_medium, cards_hard, duration_secs, xp)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      session.session_date,
+      localDate(),
       session.session_type,
       session.cards_studied,
       session.cards_correct,
       session.cards_medium,
       session.cards_hard,
       session.duration_secs,
+      xp,
     ]
   );
+  if (xp) {
+    await db.runAsync('UPDATE user_config SET xp_total = COALESCE(xp_total, 0) + ? WHERE id = 1', [xp]);
+  }
+}
+
+export async function getTodayXp() {
+  const db = getDatabase();
+  const row = await db.getFirstAsync(
+    'SELECT COALESCE(SUM(xp), 0) AS xp FROM study_sessions WHERE session_date = ?',
+    [localDate()]
+  );
+  return row?.xp || 0;
 }
 
 export async function getSessions(limit = 30) {
@@ -34,7 +49,7 @@ export async function getWeekStats() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
 
-  const startDate = sevenDaysAgo.toISOString().split('T')[0];
+  const startDate = localDate(sevenDaysAgo);
 
   return db.getAllAsync(
     `SELECT session_date, SUM(cards_studied) as total_cards
@@ -70,29 +85,25 @@ export async function setOnboardingDone() {
 }
 
 export async function updateStreak() {
-  const db = getDatabase();
   const config = await getConfig();
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate();
+  const streak = nextStreak(config.last_study_date, today, config.streak_days);
+  await updateConfig({ streak_days: streak, last_study_date: today });
+  return streak;
+}
 
-  if (!config.last_study_date) {
-    await updateConfig({ streak_days: 1, last_study_date: today });
-    return 1;
-  }
+// ── Hearts ──────────────────────────────────
 
-  const lastDate = new Date(config.last_study_date);
-  const todayDate = new Date(today);
-  const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
+export async function getHearts() {
+  const config = await getConfig();
+  return refillHearts({ hearts: config?.hearts, updatedAt: config?.hearts_updated_at });
+}
 
-  if (diffDays === 0) {
-    return config.streak_days;
-  } else if (diffDays === 1) {
-    const newStreak = config.streak_days + 1;
-    await updateConfig({ streak_days: newStreak, last_study_date: today });
-    return newStreak;
-  } else {
-    await updateConfig({ streak_days: 1, last_study_date: today });
-    return 1;
-  }
+export async function addHearts(delta) {
+  const config = await getConfig();
+  const next = changeHearts({ hearts: config?.hearts, updatedAt: config?.hearts_updated_at }, delta);
+  await updateConfig({ hearts: next.hearts, hearts_updated_at: next.updatedAt });
+  return next;
 }
 
 export async function incrementTotalStudied(count) {

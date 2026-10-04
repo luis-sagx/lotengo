@@ -8,7 +8,7 @@ import { RADIUS, SPACING, SHADOW } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import ScreenHeader from '../components/ScreenHeader';
 import SearchBar from '../components/SearchBar';
-import { getTotalDueCount, searchCards } from '../database/progressRepository';
+import { getTotalDueCount, getStudyStats, searchCards } from '../database/progressRepository';
 import { speak } from '../services/audioService';
 
 const ROW_HEIGHT = 64;
@@ -36,12 +36,14 @@ const getItemLayout = (_, index) => ({ length: ROW_HEIGHT, offset: ROW_HEIGHT * 
 
 export default function ReviewScreen({ navigation }) {
   const [due, setDue] = useState(0);
+  const [studied, setStudied] = useState(0);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
 
   useFocusEffect(
     useCallback(() => {
       getTotalDueCount().then(setDue).catch(() => setDue(0));
+      getStudyStats().then(s => setStudied(s.totalTracked)).catch(() => setStudied(0));
     }, [])
   );
 
@@ -67,13 +69,16 @@ export default function ReviewScreen({ navigation }) {
           {due === 1 ? 'tarjeta para repasar hoy' : 'tarjetas para repasar hoy'}
         </Text>
         <TouchableOpacity
-          style={[styles.reviewButton, due === 0 && styles.reviewButtonDisabled]}
-          disabled={due === 0}
+          style={[styles.reviewButton, studied === 0 && styles.reviewButtonDisabled]}
+          disabled={studied === 0}
           onPress={() => navigation.navigate('ReviewSession')}
         >
           <Ionicons name="refresh" size={18} color={COLORS.surfaceWhite} />
-          <Text style={styles.reviewButtonText}>{due === 0 ? 'Todo al día' : 'Repasar ahora'}</Text>
+          <Text style={styles.reviewButtonText}>
+            {studied === 0 ? 'Completa una lección primero' : due === 0 ? 'Practicar' : 'Repasar ahora'}
+          </Text>
         </TouchableOpacity>
+        <Text style={styles.reward}>Cada repaso completado te devuelve ❤️ 1 vida</Text>
       </View>
       <Text style={styles.sectionTitle}>Diccionario</Text>
       <SearchBar
@@ -152,6 +157,12 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY.bold,
     fontSize: 16,
     color: COLORS.surfaceWhite,
+  },
+  reward: {
+    fontFamily: FONT_FAMILY.regular,
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: SPACING.sm,
   },
   sectionTitle: {
     fontFamily: FONT_FAMILY.bold,

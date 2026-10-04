@@ -6,7 +6,7 @@ import { COLORS, Rating } from '../theme/colors';
 import { RADIUS, SPACING, SHADOW } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 
-export default function SessionSummary({ correct = 0, wrong = 0, stars = null, durationSecs = 0, onContinue }) {
+export default function SessionSummary({ correct = 0, wrong = 0, stars = null, xp = 0, heartGained = false, durationSecs = 0, onContinue }) {
   const total = correct + wrong;
   const mins = Math.floor(durationSecs / 60);
   const secs = durationSecs % 60;
@@ -27,6 +27,8 @@ export default function SessionSummary({ correct = 0, wrong = 0, stars = null, d
           </View>
         </View>
 
+        <Text style={styles.xp}>+{xp} XP</Text>
+        {heartGained && <Text style={styles.heart}>+1 ❤️ vida recuperada</Text>}
         {stars != null && <Text style={styles.stars}>{'★'.repeat(stars)}{'☆'.repeat(3 - stars)}</Text>}
 
         <View style={styles.ratingsRow}>
@@ -64,6 +66,18 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     alignItems: 'center',
     ...SHADOW.card,
+  },
+  xp: {
+    fontFamily: FONT_FAMILY.bold,
+    fontSize: 32,
+    color: COLORS.amberGold,
+    marginBottom: SPACING.sm,
+  },
+  heart: {
+    fontFamily: FONT_FAMILY.semiBold,
+    fontSize: 15,
+    color: COLORS.dangerOrange,
+    marginBottom: SPACING.sm,
   },
   stars: {
     fontSize: 36,

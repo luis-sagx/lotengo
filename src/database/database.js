@@ -4,7 +4,7 @@ import * as SQLite from 'expo-sqlite';
 let db = null;
 
 // Bump when seed content or the path changes: older databases are rebuilt.
-export const CONTENT_VERSION = 2;
+export const CONTENT_VERSION = 3;
 const TABLES = [
   'lesson_progress', 'lesson_cards', 'lessons', 'user_progress',
   'study_sessions', 'user_config', 'words', 'phrases',
@@ -51,6 +51,8 @@ export async function initDatabase() {
       audio_url       TEXT,
       example_en      TEXT,
       example_es      TEXT,
+      definition_en   TEXT,
+      enriched        INTEGER DEFAULT 0,
       is_seeded       INTEGER DEFAULT 1,
       created_at      TEXT    DEFAULT (datetime('now'))
     );
@@ -102,6 +104,7 @@ export async function initDatabase() {
       cards_medium    INTEGER DEFAULT 0,
       cards_hard      INTEGER DEFAULT 0,
       duration_secs   INTEGER DEFAULT 0,
+      xp              INTEGER DEFAULT 0,
       created_at      TEXT    DEFAULT (datetime('now'))
     );
   `);
@@ -117,7 +120,14 @@ export async function initDatabase() {
       total_studied   INTEGER DEFAULT 0,
       onboarding_done INTEGER DEFAULT 0,
       notifications   INTEGER DEFAULT 1,
-      notif_hour      INTEGER DEFAULT 9
+      notif_hour      INTEGER DEFAULT 9,
+      level           TEXT    DEFAULT 'A1',
+      placement_done  INTEGER DEFAULT 0,
+      current_lesson_id INTEGER,
+      suggestion_dismissed_at INTEGER DEFAULT -1,
+      hearts          INTEGER DEFAULT 5,
+      hearts_updated_at INTEGER,
+      xp_total        INTEGER DEFAULT 0
     );
   `);
 
@@ -155,14 +165,6 @@ export async function initDatabase() {
     );
   `);
 
-  // ── Migrations: add enrichment columns if missing ──
-  await addColumnIfMissing(database, 'words', 'definition_en', 'TEXT');
-  await addColumnIfMissing(database, 'words', 'enriched', 'INTEGER DEFAULT 0');
-  await addColumnIfMissing(database, 'user_config', 'level', "TEXT DEFAULT 'A1'");
-  await addColumnIfMissing(database, 'user_config', 'placement_done', 'INTEGER DEFAULT 0');
-  await addColumnIfMissing(database, 'user_config', 'current_lesson_id', 'INTEGER');
-  await addColumnIfMissing(database, 'user_config', 'suggestion_dismissed_at', 'INTEGER DEFAULT -1');
-
   // ── Indexes ───────────────────────────────
   await database.execAsync(`
     CREATE INDEX IF NOT EXISTS idx_words_category    ON words(category);
@@ -195,20 +197,6 @@ export async function initDatabase() {
 
 export async function markSeeded() {
   await getDatabase().execAsync(`PRAGMA user_version = ${CONTENT_VERSION}`);
-}
-
-/**
- * Adds a column to a table only if it does not already exist.
- * SQLite has no "ADD COLUMN IF NOT EXISTS", so we inspect the schema first.
- */
-async function addColumnIfMissing(database, table, column, definition) {
-  const columns = await database.getAllAsync(`PRAGMA table_info(${table})`);
-  const exists = columns.some(c => c.name === column);
-  if (!exists) {
-    await database.execAsync(
-      `ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`
-    );
-  }
 }
 
 export async function closeDatabase() {

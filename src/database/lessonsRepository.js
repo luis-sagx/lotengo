@@ -1,6 +1,7 @@
 // saflash — Lessons repository: the guided path's persistence layer.
 import { getDatabase } from './database';
 import { LEVELS, levelIndex } from '../utils/levels.mjs';
+import { localDate } from '../services/gamification.mjs';
 
 const pathCache = new Map();
 const BATCH = 100;
@@ -181,7 +182,7 @@ export async function unlockUpTo(level) {
 
 export async function completeLesson(lessonId, accuracy, stars) {
   const db = getDatabase();
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate();
 
   await db.runAsync(
     `UPDATE lesson_progress

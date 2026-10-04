@@ -1,51 +1,67 @@
-// saflash — Shared home/path header.
+// saflash — Path header: streak, hearts and the daily XP goal.
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS } from '../theme/colors';
-import { SPACING } from '../theme/spacing';
+import { RADIUS, SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
-import StreakBadge from './StreakBadge';
 import ScreenHeader from './ScreenHeader';
 import ProgressBar from './ProgressBar';
-import StatsCard from './StatsCard';
-import { formatNumber } from '../utils/formatters';
-import { getCurrentMonthYear } from '../utils/dateUtils';
+import HeartsBadge from './HeartsBadge';
 
-export default function HomeHeader({ streak, todayStudied, goal, knownCount }) {
+export default function HomeHeader({ streak, todayXp, goal, hearts }) {
+  const reached = todayXp >= goal;
+
   return (
     <>
       <ScreenHeader
         title="¡Hola! 👋"
-        subtitle={getCurrentMonthYear()}
-        trailing={<StreakBadge days={streak} />}
+        trailing={
+          <View style={styles.chips}>
+            <View style={styles.chip} accessibilityLabel={`Racha de ${streak} días`}>
+              <Text style={styles.chipText}>🔥 {streak}</Text>
+            </View>
+            <HeartsBadge hearts={hearts} />
+          </View>
+        }
       />
 
       <View style={styles.goalCard}>
         <View style={styles.goalHeader}>
-          <Text style={styles.goalTitle}>Meta diaria</Text>
-          <Text style={styles.goalCount}>{todayStudied} / {goal}</Text>
+          <Text style={styles.goalTitle}>{reached ? '¡Meta diaria cumplida! 🎉' : 'Meta diaria'}</Text>
+          <Text style={styles.goalCount}>⚡ {todayXp} / {goal} XP</Text>
         </View>
-        <ProgressBar current={todayStudied} total={goal} color={COLORS.successGreen} />
-      </View>
-
-      <View style={styles.statsRow}>
-        <StatsCard icon="today" value={todayStudied} label="Hoy" color={COLORS.accentOrange} />
-        <StatsCard icon="flame" value={`${streak}`} label="Racha" color={COLORS.amberGold} />
-        <StatsCard icon="checkmark-done" value={formatNumber(knownCount)} label="Conocidas" color={COLORS.successGreen} />
+        <ProgressBar current={Math.min(todayXp, goal)} total={goal} color={COLORS.amberGold} />
       </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  chips: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  chip: {
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.pill,
+    backgroundColor: COLORS.surfaceWhite,
+    borderWidth: 1,
+    borderColor: COLORS.borderSage,
+  },
+  chipText: {
+    fontFamily: FONT_FAMILY.bold,
+    fontSize: 15,
+    color: COLORS.deepOlive,
+  },
   goalCard: {
     marginHorizontal: SPACING.xl,
     backgroundColor: COLORS.surfaceWhite,
-    borderRadius: 6,
+    borderRadius: RADIUS.md,
     borderWidth: 1,
     borderColor: COLORS.borderSage,
     padding: SPACING.base,
-    marginBottom: SPACING.base,
+    marginBottom: SPACING.sm,
   },
   goalHeader: {
     flexDirection: 'row',
@@ -61,11 +77,5 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY.semiBold,
     fontSize: 14,
     color: COLORS.oliveInk,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    paddingHorizontal: SPACING.xl,
-    gap: SPACING.sm,
-    marginBottom: SPACING.base,
   },
 });
