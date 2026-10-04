@@ -20,7 +20,12 @@ export default function SearchBar({ value, onChangeText, placeholder = 'Buscar..
         autoCorrect={false}
       />
       {value && value.length > 0 && (
-        <TouchableOpacity onPress={() => onChangeText('')} style={styles.clear}>
+        <TouchableOpacity
+          onPress={() => onChangeText('')}
+          style={styles.clear}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityLabel="Borrar búsqueda"
+        >
           <Ionicons name="close-circle" size={18} color={COLORS.textPlaceholder} />
         </TouchableOpacity>
       )}
@@ -37,7 +42,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.borderLight,
     paddingHorizontal: SPACING.sm,
-    height: 44,
+    height: 48,
   },
   icon: {
     marginRight: SPACING.xs,

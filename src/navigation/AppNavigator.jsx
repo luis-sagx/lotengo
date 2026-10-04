@@ -3,10 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { getConfig } from '../database/sessionRepository';
 import useAppStore from '../store/appStore';
+import { setAutoSpeak } from '../services/audioService';
+import { setEffectsEnabled } from '../services/soundService';
 import OnboardingScreen from '../screens/OnboardingScreen';
 import LevelPickScreen from '../screens/LevelPickScreen';
 import PlacementTestScreen from '../screens/PlacementTestScreen';
 import MainTabNavigator from './MainTabNavigator';
+import StudyLessonScreen from '../screens/StudyLessonScreen';
+import StudySessionScreen from '../screens/StudySessionScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -26,6 +30,8 @@ export default function AppNavigator() {
       const done = config?.onboarding_done === 1 || config?.first_launch === 0;
       setOnboardingDoneStore(done);
       if (config?.level) setLevelStore(config.level);
+      setAutoSpeak(config?.auto_speak !== 0);
+      setEffectsEnabled(config?.sound_effects !== 0);
       setInitialRoute(done ? 'MainTabs' : 'Onboarding');
     } catch (err) {
       // If DB not ready yet, show onboarding
@@ -50,6 +56,16 @@ export default function AppNavigator() {
         name="MainTabs"
         component={MainTabNavigator}
         options={{ gestureEnabled: false }}
+      />
+      <Stack.Screen
+        name="StudyLesson"
+        component={StudyLessonScreen}
+        options={{ animation: 'slide_from_bottom' }}
+      />
+      <Stack.Screen
+        name="StudySession"
+        component={StudySessionScreen}
+        options={{ animation: 'slide_from_bottom' }}
       />
     </Stack.Navigator>
   );

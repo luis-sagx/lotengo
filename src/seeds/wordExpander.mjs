@@ -86,19 +86,13 @@ export function guessPhonetic(word) {
     great: '/ɡreɪt/', man: '/mæn/', woman: '/ˈwʊmən/',
     water: '/ˈwɔːtər/', food: '/fuːd/',
   };
-  return map[word.toLowerCase()] || `/${word}/`;
+  return map[word.toLowerCase()] || null;
 }
 
-export function makeExample(en, es) {
-  return [
-    `The word "${en}" means "${es}".`,
-    `La palabra "${en}" significa "${es}".`,
-  ];
-}
-
-export function expandWord(row, level, rank) {
+// `corpus` is [subtitle rank, per million, example EN, example ES] from corpus.mjs.
+export function expandWord(row, level, rank, corpus = []) {
   const [english, spanish, category, subcategory] = row;
-  const [exEn, exEs] = makeExample(english, spanish);
+  const [, perMillion = 0, exEn = null, exEs = null] = corpus;
   return {
     english_word: english,
     spanish_trans: spanish,
@@ -106,6 +100,7 @@ export function expandWord(row, level, rank) {
     category,
     subcategory: subcategory || null,
     frequency_rank: rank,
+    per_million: perMillion,
     difficulty: level,
     image_url: null,
     audio_url: null,

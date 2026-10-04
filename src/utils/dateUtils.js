@@ -22,9 +22,6 @@ export function formatRelative(dateStr) {
   return formatDistanceToNow(date, { addSuffix: true, locale: es });
 }
 
-export function getTodayISO() {
-  return new Date().toISOString().split('T')[0];
-}
 
 export function daysBetween(dateStr1, dateStr2) {
   if (!dateStr1 || !dateStr2) return 0;

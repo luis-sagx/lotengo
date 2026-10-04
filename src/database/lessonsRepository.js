@@ -1,8 +1,10 @@
 // saflash — Lessons repository: the guided path's persistence layer.
 import { getDatabase } from './database';
 import { LEVELS, levelIndex } from '../utils/levels.mjs';
+import { localDate } from '../services/streak.mjs';
 
 const pathCache = new Map();
+const BATCH = 100;
 
 function invalidatePath() {
   pathCache.clear();
@@ -15,7 +17,8 @@ export async function persistCurriculum(plannedLessons) {
   const wordIds = new Map(wordRows.map(r => [r.english_word, r.id]));
   const phraseIds = new Map(phraseRows.map(r => [r.phrase_en, r.id]));
 
-  let created = 0;
+  const cardRows = [];
+  const lessonIds = [];
 
   await db.withTransactionAsync(async () => {
     for (const lesson of plannedLessons) {
@@ -33,41 +36,39 @@ export async function persistCurriculum(plannedLessons) {
         ]
       );
       const lessonId = result.lastInsertRowId;
+      lessonIds.push(lessonId);
 
-      let position = 0;
-      for (const word of lesson.words) {
-        const id = wordIds.get(word);
-        if (id == null) throw new Error(`Missing word for lesson: ${word}`);
-        await db.runAsync(
-          'INSERT INTO lesson_cards (lesson_id, card_type, card_id, position) VALUES (?, ?, ?, ?)',
-          [lessonId, 'word', id, position++]
-        );
-      }
-      for (const phrase of lesson.phrases) {
-        const id = phraseIds.get(phrase);
-        if (id == null) throw new Error(`Missing phrase for lesson: ${phrase}`);
-        await db.runAsync(
-          'INSERT INTO lesson_cards (lesson_id, card_type, card_id, position) VALUES (?, ?, ?, ?)',
-          [lessonId, 'phrase', id, position++]
-        );
-      }
+      const cards = [
+        ...lesson.words.map(key => ['word', wordIds.get(key), key]),
+        ...lesson.phrases.map(key => ['phrase', phraseIds.get(key), key]),
+      ];
+      cards.forEach(([type, id, key], position) => {
+        if (id == null) throw new Error(`Missing ${type} for lesson: ${key}`);
+        cardRows.push([lessonId, type, id, position]);
+      });
+    }
 
+    for (let i = 0; i < cardRows.length; i += BATCH) {
+      const batch = cardRows.slice(i, i + BATCH);
       await db.runAsync(
-        "INSERT INTO lesson_progress (lesson_id, status) VALUES (?, 'locked')",
-        [lessonId]
+        `INSERT INTO lesson_cards (lesson_id, card_type, card_id, position)
+         VALUES ${batch.map(() => '(?, ?, ?, ?)').join(', ')}`,
+        batch.flat()
       );
-      created += 1;
+    }
+    for (let i = 0; i < lessonIds.length; i += BATCH) {
+      const batch = lessonIds.slice(i, i + BATCH);
+      await db.runAsync(
+        `INSERT INTO lesson_progress (lesson_id, status)
+         VALUES ${batch.map(() => "(?, 'locked')").join(', ')}`,
+        batch
+      );
     }
   });
 
+  const created = lessonIds.length;
   invalidatePath();
   return created;
-}
-
-export async function getLessonCount() {
-  const db = getDatabase();
-  const row = await db.getFirstAsync('SELECT COUNT(*) as count FROM lessons');
-  return row?.count ?? 0;
 }
 
 export function getPath(level) {
@@ -125,18 +126,21 @@ async function loadPath(level) {
 
 export async function getLessonCards(lessonId) {
   const db = getDatabase();
-  const cards = await db.getAllAsync(
-    'SELECT card_type, card_id, position FROM lesson_cards WHERE lesson_id = ? ORDER BY position',
-    [lessonId]
-  );
-
-  const result = [];
-  for (const card of cards) {
-    const table = card.card_type === 'word' ? 'words' : 'phrases';
-    const row = await db.getFirstAsync(`SELECT * FROM ${table} WHERE id = ?`, [card.card_id]);
-    if (row) result.push({ ...row, card_type: card.card_type });
-  }
-  return result;
+  const [words, phrases] = await Promise.all([
+    db.getAllAsync(
+      `SELECT w.*, 'word' AS card_type, lc.position FROM lesson_cards lc
+       JOIN words w ON w.id = lc.card_id
+       WHERE lc.lesson_id = ? AND lc.card_type = 'word'`,
+      [lessonId]
+    ),
+    db.getAllAsync(
+      `SELECT p.*, 'phrase' AS card_type, lc.position FROM lesson_cards lc
+       JOIN phrases p ON p.id = lc.card_id
+       WHERE lc.lesson_id = ? AND lc.card_type = 'phrase'`,
+      [lessonId]
+    ),
+  ]);
+  return [...words, ...phrases].sort((a, b) => a.position - b.position);
 }
 
 export async function unlockUpTo(level) {
@@ -176,9 +180,31 @@ export async function unlockUpTo(level) {
   invalidatePath();
 }
 
+// After a content rebuild: a lesson is completed when all its cards have
+// progress, the lesson after it is unlocked, and the chosen level is open.
+export async function restoreLessonProgress() {
+  const db = getDatabase();
+  await db.runAsync(`
+    UPDATE lesson_progress SET status = 'completed'
+    WHERE lesson_id IN (
+      SELECT lc.lesson_id FROM lesson_cards lc
+      LEFT JOIN user_progress up ON up.card_type = lc.card_type AND up.card_id = lc.card_id
+      GROUP BY lc.lesson_id
+      HAVING COUNT(up.id) = COUNT(*)
+    )`);
+  await db.runAsync(`
+    UPDATE lesson_progress SET status = 'unlocked'
+    WHERE status = 'locked'
+      AND lesson_id - 1 IN (SELECT lesson_id FROM lesson_progress WHERE status = 'completed')`);
+  await db.runAsync('UPDATE user_config SET current_lesson_id = NULL WHERE id = 1');
+  const config = await db.getFirstAsync('SELECT level, placement_done FROM user_config WHERE id = 1');
+  if (config?.placement_done === 1) await unlockUpTo(config.level);
+  invalidatePath();
+}
+
 export async function completeLesson(lessonId, accuracy, stars) {
   const db = getDatabase();
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDate();
 
   await db.runAsync(
     `UPDATE lesson_progress
@@ -191,15 +217,11 @@ export async function completeLesson(lessonId, accuracy, stars) {
   );
   invalidatePath();
 
-  const all = await db.getAllAsync('SELECT id, level, unit_index, lesson_index FROM lessons');
-  all.sort((a, b) =>
-    levelIndex(a.level) - levelIndex(b.level) ||
-    a.unit_index - b.unit_index ||
-    a.lesson_index - b.lesson_index
+  // Lessons are inserted in path order, so the next lesson is the next id.
+  const next = await db.getFirstAsync(
+    'SELECT id FROM lessons WHERE id > ? ORDER BY id LIMIT 1',
+    [lessonId]
   );
-
-  const position = all.findIndex(l => l.id === lessonId);
-  const next = position >= 0 ? all[position + 1] : null;
   if (!next) return { nextLessonId: null };
 
   await db.runAsync(

@@ -1,4 +1,4 @@
-// saflash — Guided fixed lesson study screen.
+// saflash — Path lesson quiz screen.
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,7 +7,7 @@ import { COLORS } from '../theme/colors';
 import { SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import { useLessonSession } from '../hooks/useLessonSession';
-import FlashCard from '../components/FlashCard';
+import Exercise from '../components/Exercise';
 import ProgressBar from '../components/ProgressBar';
 import LoadingCard from '../components/LoadingCard';
 import SessionSummary from '../components/SessionSummary';
@@ -49,7 +49,7 @@ export default function StudyLessonScreen({ navigation, route }) {
     if (current) await setCurrentLesson(current.id);
     setStoreLevel(suggestion.level);
     setSuggestion(null);
-    navigation.navigate('Path');
+    navigation.goBack();
   };
 
   const dismissSuggestion = async () => {
@@ -67,27 +67,29 @@ export default function StudyLessonScreen({ navigation, route }) {
     );
   }
 
-  if (session.error || session.totalCards === 0) {
+  if (session.error || session.total === 0) {
     return (
       <SafeAreaView style={styles.container}>
         <Header navigation={navigation} current={0} total={1} />
         <View style={styles.empty}>
-          <Text style={styles.emptyText}>{session.error || 'No hay tarjetas en esta lección.'}</Text>
+          <Text style={styles.emptyText}>
+            {session.error || 'No hay tarjetas en esta lección.'}
+          </Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  if (session.isComplete) {
+  if (session.completed) {
     return (
       <View style={styles.summaryWrap}>
         <SessionSummary
-          easy={session.stats.easy}
-          medium={session.stats.medium}
-          hard={session.stats.hard}
+          title="¡Lección completada!"
+          correct={session.completed.correct}
+          wrong={session.completed.wrong}
+          stars={session.completed.stars}
           durationSecs={session.completed.durationSecs}
-          onContinue={() => navigation.navigate('Path')}
-          onViewProgress={() => navigation.navigate('Path')}
+          onContinue={() => navigation.goBack()}
         />
         <View style={styles.suggestionOverlay}>
           <LevelSuggestionCard
@@ -104,17 +106,10 @@ export default function StudyLessonScreen({ navigation, route }) {
     <SafeAreaView style={styles.container}>
       <Header
         navigation={navigation}
-        current={session.currentIndex}
-        total={session.totalCards}
+        current={session.index}
+        total={session.total}
       />
-      <View style={styles.cardArea}>
-        <FlashCard
-          card={session.currentCard}
-          cardType={session.currentCard?.card_type || 'word'}
-          onRatingPress={session.scoreCard}
-        />
-      </View>
-      <Text style={styles.hint}>Toca la tarjeta para ver la traducción</Text>
+      {session.step && <Exercise step={session.step} onCheck={session.answer} onNext={session.next} />}
     </SafeAreaView>
   );
 }
@@ -122,13 +117,12 @@ export default function StudyLessonScreen({ navigation, route }) {
 function Header({ navigation, current, total }) {
   return (
     <View style={styles.header}>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
+      <TouchableOpacity onPress={() => navigation.goBack()} accessibilityLabel="Salir de la lección">
         <Ionicons name="close" size={28} color={COLORS.oliveInk} />
       </TouchableOpacity>
       <View style={styles.progressWrapper}>
-        <ProgressBar current={current} total={total} color={COLORS.deepOlive} height={4} />
+        <ProgressBar current={current} total={total} color={COLORS.successGreen} height={12} />
       </View>
-      <Text style={styles.counter}>{Math.min(current + 1, total)} / {total}</Text>
     </View>
   );
 }
@@ -148,23 +142,6 @@ const styles = StyleSheet.create({
   progressWrapper: {
     flex: 1,
   },
-  counter: {
-    fontFamily: FONT_FAMILY.semiBold,
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  cardArea: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  hint: {
-    fontFamily: FONT_FAMILY.regular,
-    fontSize: 13,
-    color: COLORS.textPlaceholder,
-    textAlign: 'center',
-    marginBottom: SPACING.xl,
-  },
   empty: {
     flex: 1,
     justifyContent: 'center',
@@ -176,6 +153,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textSecondary,
     textAlign: 'center',
+    marginBottom: SPACING.base,
   },
   summaryWrap: {
     flex: 1,

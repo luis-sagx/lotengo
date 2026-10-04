@@ -101,7 +101,7 @@ export const ACHIEVEMENTS = [
   { id: 'five_hundred', icon: '🚀', title: 'Quinientas palabras', description: '500 palabras dominadas', condition: (s) => s.knownWords >= 500 },
   { id: 'thousand', icon: '🏆', title: 'Mil palabras', description: '1,000 palabras dominadas', condition: (s) => s.knownWords >= 1000 },
   { id: 'talker', icon: '💬', title: 'Hablador', description: '50 frases dominadas', condition: (s) => s.knownPhrases >= 50 },
-  { id: 'perfect_session', icon: '⭐', title: 'Sesión perfecta', description: '20/20 en una sesión', condition: (s) => s.perfectSession },
+  { id: 'perfect_session', icon: '⭐', title: 'Lección perfecta', description: 'Una lección sin errores', condition: (s) => s.perfectSession },
 ];
 
 export function checkAchievements(stats) {

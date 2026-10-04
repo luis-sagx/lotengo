@@ -1,5 +1,6 @@
 // saflash — Sessions + config repository
 import { getDatabase } from './database';
+import { localDate, nextStreak } from '../services/streak.mjs';
 
 // ── Study Sessions ──────────────────────────
 
@@ -10,7 +11,7 @@ export async function saveSession(session) {
       (session_date, session_type, cards_studied, cards_correct, cards_medium, cards_hard, duration_secs)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
-      session.session_date,
+      localDate(),
       session.session_type,
       session.cards_studied,
       session.cards_correct,
@@ -34,7 +35,7 @@ export async function getWeekStats() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
 
-  const startDate = sevenDaysAgo.toISOString().split('T')[0];
+  const startDate = localDate(sevenDaysAgo);
 
   return db.getAllAsync(
     `SELECT session_date, SUM(cards_studied) as total_cards
@@ -70,40 +71,22 @@ export async function setOnboardingDone() {
 }
 
 export async function updateStreak() {
-  const db = getDatabase();
   const config = await getConfig();
-  const today = new Date().toISOString().split('T')[0];
-
-  if (!config.last_study_date) {
-    await updateConfig({ streak_days: 1, last_study_date: today });
-    return 1;
-  }
-
-  const lastDate = new Date(config.last_study_date);
-  const todayDate = new Date(today);
-  const diffDays = Math.floor((todayDate - lastDate) / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) {
-    return config.streak_days;
-  } else if (diffDays === 1) {
-    const newStreak = config.streak_days + 1;
-    await updateConfig({ streak_days: newStreak, last_study_date: today });
-    return newStreak;
-  } else {
-    await updateConfig({ streak_days: 1, last_study_date: today });
-    return 1;
-  }
+  const today = localDate();
+  const { streak, freezeAt } = nextStreak({
+    lastDate: config.last_study_date,
+    streak: config.streak_days,
+    freezeAt: config.streak_freeze_at,
+  }, today);
+  await updateConfig({ streak_days: streak, last_study_date: today, streak_freeze_at: freezeAt });
+  return streak;
 }
 
 export async function incrementTotalStudied(count) {
-  const config = await getConfig();
-  const newTotal = (config.total_studied || 0) + count;
-  await updateConfig({ total_studied: newTotal });
-  return newTotal;
-}
-
-export async function updateDailyGoal(goal) {
-  await updateConfig({ daily_goal: goal });
+  await getDatabase().runAsync(
+    'UPDATE user_config SET total_studied = COALESCE(total_studied, 0) + ? WHERE id = 1',
+    [count]
+  );
 }
 
 export async function toggleNotifications(enabled) {

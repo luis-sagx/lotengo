@@ -1,14 +1,15 @@
-// saflash — Word seed index: concatenates levels and assigns frequency ranks.
+// saflash — Word seed index: concatenates levels and ranks each level's words by
+// real frequency (OpenSubtitles), so the most useful words come first.
 import { LEVELS } from '../../utils/levels.mjs';
 import { expandWord } from '../wordExpander.mjs';
-import { withSupplementalWords } from '../supplementalContent.mjs';
+import { CORPUS } from '../corpus.mjs';
 import { A1_WORDS } from './a1.mjs';
 import { A2_WORDS } from './a2.mjs';
 import { B1_WORDS } from './b1.mjs';
 import { B2_WORDS } from './b2.mjs';
 import { C1_WORDS } from './c1.mjs';
 
-const BASE_WORDS_COMPACT_BY_LEVEL = {
+export const WORDS_COMPACT_BY_LEVEL = {
   A1: A1_WORDS,
   A2: A2_WORDS,
   B1: B1_WORDS,
@@ -16,15 +17,15 @@ const BASE_WORDS_COMPACT_BY_LEVEL = {
   C1: C1_WORDS,
 };
 
-export const WORDS_COMPACT_BY_LEVEL = withSupplementalWords(BASE_WORDS_COMPACT_BY_LEVEL);
-
 function build() {
   const byLevel = {};
   let rank = 1;
   for (const level of LEVELS) {
-    byLevel[level] = WORDS_COMPACT_BY_LEVEL[level].map(row =>
-      expandWord(row, level, rank++)
-    );
+    const data = row => CORPUS[row[0].toLowerCase()] || [];
+    const sorted = [...WORDS_COMPACT_BY_LEVEL[level]]
+      .map((row, i) => ({ row, i }))
+      .sort((a, b) => ((data(a.row)[0] ?? Infinity) - (data(b.row)[0] ?? Infinity)) || a.i - b.i);
+    byLevel[level] = sorted.map(({ row }) => expandWord(row, level, rank++, data(row)));
   }
   return byLevel;
 }

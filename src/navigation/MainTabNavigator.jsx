@@ -4,18 +4,18 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { FONT_FAMILY } from '../theme/typography';
-import PathNavigator from './PathNavigator';
-import WordsNavigator from './WordsNavigator';
-import PhrasesNavigator from './PhrasesNavigator';
+import TodayScreen from '../screens/TodayScreen';
+import PathScreen from '../screens/PathScreen';
+import DictionaryScreen from '../screens/DictionaryScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
 
 const TAB_ICONS = {
-  Home: { focused: 'home', unfocused: 'home-outline' },
-  WordsNavigator: { focused: 'book', unfocused: 'book-outline' },
-  PhrasesNavigator: { focused: 'chatbubbles', unfocused: 'chatbubbles-outline' },
+  Home: { focused: 'today', unfocused: 'today-outline' },
+  Topics: { focused: 'map', unfocused: 'map-outline' },
+  Dictionary: { focused: 'book', unfocused: 'book-outline' },
   Progress: { focused: 'bar-chart', unfocused: 'bar-chart-outline' },
   Settings: { focused: 'settings', unfocused: 'settings-outline' },
 };
@@ -30,36 +30,34 @@ export default function MainTabNavigator() {
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: COLORS.deepOlive,
-        tabBarInactiveTintColor: COLORS.textPlaceholder,
+        tabBarInactiveTintColor: COLORS.textSecondary,
         tabBarLabelStyle: {
-          fontFamily: FONT_FAMILY.medium,
-          fontSize: 10,
+          fontFamily: FONT_FAMILY.semiBold,
+          fontSize: 12,
         },
         tabBarStyle: {
           backgroundColor: COLORS.surfaceWhite,
           borderTopColor: COLORS.borderSage,
           borderTopWidth: 1,
-          paddingBottom: 4,
-          paddingTop: 4,
-          height: 56,
+          paddingTop: 6,
         },
         headerShown: false,
       })}
     >
       <Tab.Screen
         name="Home"
-        component={PathNavigator}
-        options={{ tabBarLabel: 'Inicio' }}
+        component={TodayScreen}
+        options={{ tabBarLabel: 'Hoy' }}
       />
       <Tab.Screen
-        name="WordsNavigator"
-        component={WordsNavigator}
-        options={{ tabBarLabel: 'Palabras' }}
+        name="Topics"
+        component={PathScreen}
+        options={{ tabBarLabel: 'Temas' }}
       />
       <Tab.Screen
-        name="PhrasesNavigator"
-        component={PhrasesNavigator}
-        options={{ tabBarLabel: 'Frases' }}
+        name="Dictionary"
+        component={DictionaryScreen}
+        options={{ tabBarLabel: 'Diccionario' }}
       />
       <Tab.Screen
         name="Progress"

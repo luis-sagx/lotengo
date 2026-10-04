@@ -1,8 +1,11 @@
 // saflash — Progress/stats hook
-import { useState, useEffect, useCallback } from 'react';
-import { getStudyStats, getTodayStats } from '../database/progressRepository';
-import { getConfig } from '../database/sessionRepository';
-import { getWeekStats } from '../database/sessionRepository';
+import { useState, useCallback } from 'react';
+import {
+  getStudyStats, getAchievementStats, getMemoryRows, getReviewRatings, getDueTimes,
+} from '../database/progressRepository';
+import { memorySummary, trueRetention, dueForecast } from '../services/stats.mjs';
+import { DEFAULT_RETENTION } from '../services/srs.mjs';
+import { getConfig, getWeekStats } from '../database/sessionRepository';
 import { getTotalWordsCount } from '../database/wordsRepository';
 import { getTotalPhrasesCount } from '../database/phrasesRepository';
 import { checkAchievements } from '../utils/formatters';
@@ -11,13 +14,15 @@ import useAppStore from '../store/appStore';
 export function useProgress() {
   const [stats, setStats] = useState({
     study: { newCount: 0, learningCount: 0, reviewingCount: 0, knownCount: 0 },
-    todayStudied: 0,
     streak: 0,
     totalStudied: 0,
-    dailyGoal: 20,
     totalWords: 5000,
     totalPhrases: 500,
     weekData: [],
+    memory: { retained: 0, mature: 0, coverage: 0 },
+    retention: { rate: null, count: 0 },
+    targetRetention: DEFAULT_RETENTION,
+    forecast: [],
     achievements: [],
     loading: true,
   });
@@ -29,26 +34,30 @@ export function useProgress() {
     try {
       const [
         studyStats,
-        todayCards,
         config,
         weekData,
         totalWords,
         totalPhrases,
+        achievementStats,
+        memoryRows,
+        ratings,
+        dueTimes,
       ] = await Promise.all([
         getStudyStats(),
-        getTodayStats(),
         getConfig(),
         getWeekStats(),
         getTotalWordsCount(),
         getTotalPhrasesCount(),
+        getAchievementStats(),
+        getMemoryRows(),
+        getReviewRatings(Date.now() - 30 * 86400000),
+        getDueTimes(Date.now() + 7 * 86400000),
       ]);
 
       const currentStats = {
-        knownWords: studyStats.knownCount || 0,
-        knownPhrases: 0, // Will be calculated separately if needed
+        ...achievementStats,
         streak: config?.streak_days || 0,
         totalStudied: config?.total_studied || 0,
-        perfectSession: false,
       };
 
       setStreakDays(currentStats.streak);
@@ -56,13 +65,15 @@ export function useProgress() {
 
       setStats({
         study: studyStats,
-        todayStudied: todayCards,
         streak: currentStats.streak,
         totalStudied: currentStats.totalStudied,
-        dailyGoal: config?.daily_goal || 20,
         totalWords: totalWords || 5000,
         totalPhrases: totalPhrases || 500,
         weekData: weekData || [],
+        memory: memorySummary(memoryRows),
+        retention: trueRetention(ratings),
+        targetRetention: config?.desired_retention || DEFAULT_RETENTION,
+        forecast: dueForecast(dueTimes),
         achievements: checkAchievements(currentStats),
         loading: false,
       });
@@ -71,10 +82,6 @@ export function useProgress() {
       setStats(prev => ({ ...prev, loading: false }));
     }
   }, [setStreakDays, setTotalStudied]);
-
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
 
   return { ...stats, refresh: loadStats };
 }

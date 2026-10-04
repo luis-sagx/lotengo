@@ -1,20 +1,26 @@
 // saflash — Session summary (shown after completing a study session)
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { COLORS, Rating } from '../theme/colors';
 import { RADIUS, SPACING, SHADOW } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
+import { playEffect } from '../services/soundService';
 
-export default function SessionSummary({ easy = 0, medium = 0, hard = 0, durationSecs = 0, onContinue, onViewProgress }) {
-  const total = easy + medium + hard;
+export default function SessionSummary({ title, correct = 0, wrong = 0, stars = null, durationSecs = 0, onContinue }) {
+  const total = correct + wrong;
+
+  useEffect(() => {
+    playEffect('complete');
+  }, []);
   const mins = Math.floor(durationSecs / 60);
   const secs = durationSecs % 60;
 
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.congrats}>🎉 ¡Sesión completada!</Text>
+        <Text style={styles.congrats}>🎉 {title}</Text>
 
         <View style={styles.statsRow}>
           <View style={styles.stat}>
@@ -27,30 +33,35 @@ export default function SessionSummary({ easy = 0, medium = 0, hard = 0, duratio
           </View>
         </View>
 
-        <View style={styles.ratingsRow}>
-          <View style={[styles.ratingPill, { backgroundColor: Rating.easy + '20' }]}>
-            <Ionicons name="checkmark-circle" size={16} color={Rating.easy} />
-            <Text style={[styles.ratingText, { color: Rating.easy }]}>{easy} Fácil</Text>
+        {stars != null && (
+          <View style={styles.starsRow}>
+            {[0, 1, 2].map(i => (
+              <Animated.Text key={i} entering={ZoomIn.delay(400 + i * 180).springify()} style={styles.stars}>
+                {i < stars ? '★' : '☆'}
+              </Animated.Text>
+            ))}
           </View>
-          <View style={[styles.ratingPill, { backgroundColor: Rating.medium + '20' }]}>
-            <Ionicons name="remove-circle" size={16} color={Rating.medium} />
-            <Text style={[styles.ratingText, { color: Rating.medium }]}>{medium} Bien</Text>
+        )}
+
+        <Animated.View entering={FadeInDown.delay(900)} style={styles.ratingsRow}>
+          <View style={[styles.ratingPill, { backgroundColor: Rating.good + '20' }]}>
+            <Ionicons name="checkmark-circle" size={16} color={Rating.good} />
+            <Text style={[styles.ratingText, { color: Rating.good }]}>{correct} recordadas</Text>
           </View>
-          <View style={[styles.ratingPill, { backgroundColor: Rating.hard + '20' }]}>
-            <Ionicons name="close-circle" size={16} color={Rating.hard} />
-            <Text style={[styles.ratingText, { color: Rating.hard }]}>{hard} Difícil</Text>
+          <View style={[styles.ratingPill, { backgroundColor: Rating.again + '20' }]}>
+            <Ionicons name="refresh-circle" size={16} color={Rating.again} />
+            <Text style={[styles.ratingText, { color: Rating.again }]}>{wrong} a repasar</Text>
           </View>
-        </View>
+        </Animated.View>
+        {wrong > 0 && (
+          <Animated.Text entering={FadeInDown.delay(1100)} style={styles.note}>
+            Lo que fallaste volverá pronto: equivocarse y ver la respuesta también ayuda a aprender.
+          </Animated.Text>
+        )}
 
         <TouchableOpacity style={styles.primaryButton} onPress={onContinue} activeOpacity={0.8}>
-          <Text style={styles.primaryButtonText}>Seguir estudiando</Text>
+          <Text style={styles.primaryButtonText}>Continuar</Text>
         </TouchableOpacity>
-
-        {onViewProgress && (
-          <TouchableOpacity style={styles.secondaryButton} onPress={onViewProgress} activeOpacity={0.7}>
-            <Text style={styles.secondaryButtonText}>Ver mi progreso</Text>
-          </TouchableOpacity>
-        )}
       </View>
     </View>
   );
@@ -72,6 +83,23 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     alignItems: 'center',
     ...SHADOW.card,
+  },
+  note: {
+    fontFamily: FONT_FAMILY.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: SPACING.lg,
+  },
+  starsRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginBottom: SPACING.base,
+  },
+  stars: {
+    fontSize: 40,
+    color: COLORS.starYellow,
   },
   congrats: {
     fontFamily: FONT_FAMILY.bold,
@@ -131,14 +159,5 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY.semiBold,
     fontSize: 16,
     color: COLORS.surfaceWhite,
-  },
-  secondaryButton: {
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    fontFamily: FONT_FAMILY.semiBold,
-    fontSize: 15,
-    color: COLORS.accentOrange,
   },
 });

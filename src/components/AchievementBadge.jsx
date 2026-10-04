@@ -7,14 +7,14 @@ import { FONT_FAMILY } from '../theme/typography';
 
 export default function AchievementBadge({ id, icon, title, unlocked = false }) {
   return (
-    <View style={[styles.badge, { opacity: unlocked ? 1 : 0.4 }]}>
+    <View style={styles.badge}>
       <View style={[styles.iconContainer, { backgroundColor: unlocked ? COLORS.sageCream : COLORS.sageCream }]}>
         <Text style={styles.icon}>{unlocked ? icon : '🔒'}</Text>
       </View>
       <Text
         style={[
           styles.title,
-          { color: unlocked ? COLORS.textPrimary : COLORS.textPlaceholder },
+          { color: unlocked ? COLORS.textPrimary : COLORS.textSecondary },
         ]}
         numberOfLines={1}
       >
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FONT_FAMILY.medium,
-    fontSize: 11,
+    fontSize: 12,
     textAlign: 'center',
   },
 });

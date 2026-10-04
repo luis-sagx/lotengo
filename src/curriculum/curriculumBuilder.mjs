@@ -1,77 +1,84 @@
-// saflash — Turns curriculum plus seed content into planned lessons.
+// saflash — Turns seed content into planned lessons, one unit per category.
 import { LEVELS } from '../utils/levels.mjs';
-import { WORDS_PER_LESSON, PHRASES_PER_LESSON } from './curriculum.mjs';
+import {
+  LESSON_SIZE,
+  MIN_LESSON_SIZE,
+  MIXED_CATEGORY,
+  CATEGORY_ORDER,
+} from './curriculum.mjs';
 
 function sortByRank(items) {
   return [...items].sort((a, b) => (a.frequency_rank || 0) - (b.frequency_rank || 0));
 }
 
-function take(pool, category, count, used, keyOf) {
-  const picked = [];
-  const categoryItems = pool.filter(item => item.category === category && !used.has(keyOf(item)));
-
-  for (const item of categoryItems) {
-    if (picked.length === count) break;
-    picked.push(item);
-    used.add(keyOf(item));
-  }
-
-  let fellBack = false;
-  if (picked.length < count) {
-    const rest = pool.filter(item => !used.has(keyOf(item)));
-    for (const item of rest) {
-      if (picked.length === count) break;
-      picked.push(item);
-      used.add(keyOf(item));
-      fellBack = true;
-    }
-  }
-
-  return { picked, fellBack };
+function orderOf(category) {
+  if (category === MIXED_CATEGORY) return Infinity;
+  const index = CATEGORY_ORDER.indexOf(category);
+  return index === -1 ? CATEGORY_ORDER.length : index;
 }
 
-export function planLessons(curriculum, wordsByLevel, phrasesByLevel) {
+// Chunks cards into lessons of LESSON_SIZE; a short tail joins the last lesson.
+export function chunkLessons(cards) {
+  const chunks = [];
+  for (let i = 0; i < cards.length; i += LESSON_SIZE) {
+    chunks.push(cards.slice(i, i + LESSON_SIZE));
+  }
+  const tail = chunks[chunks.length - 1];
+  if (chunks.length > 1 && tail.length < MIN_LESSON_SIZE) {
+    chunks.pop();
+    chunks[chunks.length - 1].push(...tail);
+  }
+  return chunks;
+}
+
+function groupLevel(words, phrases) {
+  const groups = new Map();
+  const add = (category, card) => {
+    if (!groups.has(category)) groups.set(category, []);
+    groups.get(category).push(card);
+  };
+
+  for (const w of sortByRank(words)) {
+    add(w.category, { type: 'word', key: w.english_word });
+  }
+  for (const p of sortByRank(phrases)) {
+    add(p.category, { type: 'phrase', key: p.phrase_en });
+  }
+
+  const mixed = groups.get(MIXED_CATEGORY) || [];
+  groups.delete(MIXED_CATEGORY);
+  for (const [category, cards] of groups) {
+    if (cards.length < MIN_LESSON_SIZE) {
+      mixed.push(...cards);
+      groups.delete(category);
+    }
+  }
+  if (mixed.length >= MIN_LESSON_SIZE) groups.set(MIXED_CATEGORY, mixed);
+
+  return [...groups.entries()].sort((a, b) => orderOf(a[0]) - orderOf(b[0]));
+}
+
+export function planLessons(wordsByLevel, phrasesByLevel, { titleOf = c => c, iconOf = () => null } = {}) {
   const lessons = [];
-  const warnings = [];
 
   for (const level of LEVELS) {
-    const units = curriculum[level] || [];
-    const wordPool = sortByRank(wordsByLevel[level] || []);
-    const phrasePool = sortByRank(phrasesByLevel[level] || []);
-    const usedWords = new Set();
-    const usedPhrases = new Set();
+    const units = groupLevel(wordsByLevel[level] || [], phrasesByLevel[level] || []);
 
-    units.forEach((unit, unitIndex) => {
-      for (let lessonIndex = 0; lessonIndex < unit.lessons; lessonIndex += 1) {
-        const wordPick = take(wordPool, unit.category, WORDS_PER_LESSON, usedWords, w => w.english_word);
-        const phrasePick = take(phrasePool, unit.category, PHRASES_PER_LESSON, usedPhrases, p => p.phrase_en);
-
-        if (wordPick.picked.length < WORDS_PER_LESSON || phrasePick.picked.length < PHRASES_PER_LESSON) {
-          warnings.push(
-            `${level} ${unit.category} lesson ${lessonIndex + 1}: not enough content ` +
-            `(${wordPick.picked.length}/${WORDS_PER_LESSON} words, ` +
-            `${phrasePick.picked.length}/${PHRASES_PER_LESSON} phrases)`
-          );
-          continue;
-        }
-
-        if (wordPick.fellBack || phrasePick.fellBack) {
-          warnings.push(`${level} ${unit.category} lesson ${lessonIndex + 1}: used fallback content`);
-        }
-
+    units.forEach(([category, cards], unitIndex) => {
+      chunkLessons(cards).forEach((chunk, lessonIndex) => {
         lessons.push({
           level,
           unit_index: unitIndex,
           lesson_index: lessonIndex,
-          unit_title: unit.title,
-          category: unit.category,
-          icon: unit.icon,
-          words: wordPick.picked.map(w => w.english_word),
-          phrases: phrasePick.picked.map(p => p.phrase_en),
+          unit_title: titleOf(category),
+          category,
+          icon: iconOf(category),
+          words: chunk.filter(c => c.type === 'word').map(c => c.key),
+          phrases: chunk.filter(c => c.type === 'phrase').map(c => c.key),
         });
-      }
+      });
     });
   }
 
-  return { lessons, warnings };
+  return { lessons };
 }

@@ -7,6 +7,7 @@
 
 import { getDatabase } from '../database/database';
 import { getWordImageUri } from './imageService';
+import { registerAudio } from './audioService';
 
 const DICT_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
 
@@ -86,10 +87,13 @@ async function doEnrich(word) {
   // Fetch dictionary data and (maybe) image in parallel; neither blocks the other.
   // The image promise distinguishes "no image" (resolves null) from a transient
   // failure (rejects), so we know whether retrying later could still help.
-  const [dict, imageResult] = await Promise.all([
+  // dictResult: null = transient failure, { data: null } = word not in dictionary.
+  const [dictResult, imageResult] = await Promise.all([
     fetchWithTimeout(`${DICT_URL}${encodeURIComponent(term)}`)
-      .then(r => (r.ok ? r.json() : null))
-      .then(parseDictionary)
+      .then(r => {
+        if (r.status === 404) return { data: null };
+        return r.ok ? r.json().then(json => ({ data: parseDictionary(json) })) : null;
+      })
       .catch(() => null),
     wantsImage
       ? getWordImageUri(term).then(
@@ -102,11 +106,12 @@ async function doEnrich(word) {
   const newImage = imageResult.uri;
 
   // What might still improve on a later attempt?
-  const dictPending = !dict; // never got real definition/example/audio
+  const dict = dictResult?.data || null;
+  const dictPending = !dictResult; // transient failure; a 404 is final
   const imagePending = wantsImage && !newImage && imageResult.transient; // 429 etc.
 
   // If we gained nothing this time, don't touch the row — let it retry later.
-  const gainedSomething = !!dict || (!!newImage && newImage !== word.image_url);
+  const gainedSomething = !!dictResult || (!!newImage && newImage !== word.image_url);
   if (!gainedSomething && (dictPending || imagePending)) return word;
 
   const merged = {
@@ -114,18 +119,20 @@ async function doEnrich(word) {
     phonetic: dict?.phonetic || word.phonetic || null,
     audio_url: dict?.audio_url || word.audio_url || null,
     definition_en: dict?.definition_en || word.definition_en || null,
-    example_en: dict?.example_en || word.example_en || null,
+    // Seeded Tatoeba examples carry a translation; keep them over dictionary ones.
+    example_en: word.example_en || dict?.example_en || null,
     image_url: newImage || word.image_url || null,
     // Finalize only when nothing useful remains to fetch.
     enriched: !dictPending && !imagePending ? 1 : 0,
   };
+  registerAudio(merged.english_word, merged.audio_url);
 
   try {
     const db = getDatabase();
     await db.runAsync(
       `UPDATE words
          SET phonetic = ?, audio_url = ?, definition_en = ?,
-             example_en = ?, image_url = ?, enriched = 1
+             example_en = ?, image_url = ?, enriched = ?
        WHERE id = ?`,
       [
         merged.phonetic,
@@ -133,6 +140,7 @@ async function doEnrich(word) {
         merged.definition_en,
         merged.example_en,
         merged.image_url,
+        merged.enriched,
         word.id,
       ]
     );
@@ -150,7 +158,10 @@ async function doEnrich(word) {
  */
 export async function enrichWord(word) {
   if (!word || !word.id) return word;
-  if (word.enriched) return word;
+  if (word.enriched) {
+    registerAudio(word.english_word, word.audio_url);
+    return word;
+  }
   if (inflight.has(word.id)) return inflight.get(word.id);
 
   const promise = doEnrich(word);

@@ -1,11 +1,6 @@
 // saflash — A1 words. Row format: [english, spanish, category, subcategory|null]
 
 export const A1_WORDS = [
-  ["A","vocal A","vowels",null],
-  ["E","vocal E","vowels",null],
-  ["I","vocal I","vowels",null],
-  ["O","vocal O","vowels",null],
-  ["U","vocal U","vowels",null],
   ["zero","cero","numbers",null],
   ["one","uno","numbers",null],
   ["two","dos","numbers",null],
