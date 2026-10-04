@@ -32,7 +32,7 @@ export default function FlashCard({ card, onRate, intervals }) {
     setFlipped(false);
     rotation.value = 0;
     speakAuto(card.en);
-    if (isWord && !card.enriched) {
+    if (isWord) {
       enrichWord({ ...card, english_word: card.en }).then(updated => {
         if (alive && updated) setData(prev => ({ ...prev, ...updated }));
       });
@@ -84,11 +84,13 @@ export default function FlashCard({ card, onRate, intervals }) {
             <SpeakButton text={card.en} />
           </View>
           <Text style={styles.translation} numberOfLines={3}>{card.es}</Text>
-          {isWord && data.definition_en ? (
+          {isWord && data.definition_en && !data.example_en ? (
             <Text style={styles.definition} numberOfLines={3}>{data.definition_en}</Text>
           ) : null}
           {!isWord && card.context ? <Text style={styles.definition}>{card.context}</Text> : null}
           {isWord && data.example_en ? <Text style={styles.example}>"{data.example_en}"</Text> : null}
+          {isWord && data.example_es ? <Text style={styles.definition}>{data.example_es}</Text> : null}
+          {card.falseFriend ? <Text style={styles.falseFriend}>⚠️ {card.falseFriend}</Text> : null}
         </View>
         {flipped && <RatingButtons onPress={onRate} intervals={intervals} />}
       </Animated.View>
@@ -200,6 +202,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     color: COLORS.sageCream,
+    textAlign: 'center',
+    paddingHorizontal: 10,
+  },
+  falseFriend: {
+    fontFamily: FONT_FAMILY.medium,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#FFD27A',
     textAlign: 'center',
     paddingHorizontal: 10,
   },

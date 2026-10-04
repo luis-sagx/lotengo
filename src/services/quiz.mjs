@@ -2,6 +2,7 @@
 // A card is { key, type: 'word'|'phrase', en, es, state? }.
 // Recognition (multiple choice) is for first exposures; once a card reaches
 // review it is asked with recall: the learner produces the English (Nakata 2016).
+import { FALSE_FRIENDS } from '../seeds/falseFriends.mjs';
 
 export const EXERCISE = {
   INTRO: 'intro',             // present a new card, no answer
@@ -23,12 +24,14 @@ const OPTION_COUNT = 4;
 // Normalizes a words/phrases DB row into a card.
 export function toCard(row) {
   const type = row.card_type;
+  const en = row.en ?? row.english_word ?? row.phrase_en;
   return {
     ...row,
     key: `${type}-${row.id}`,
     type,
-    en: row.en ?? row.english_word ?? row.phrase_en,
+    en,
     es: row.es ?? row.spanish_trans ?? row.phrase_es,
+    falseFriend: type === 'word' ? FALSE_FRIENDS[en?.toLowerCase()] || null : null,
   };
 }
 
@@ -167,6 +170,8 @@ export function exerciseFor(card, { mode = 'type', round = 0 } = {}) {
     return round % 2 === 0 ? EXERCISE.CHOOSE_EN : EXERCISE.LISTEN;
   }
   if (mode === 'flip') return EXERCISE.FLIP;
+  // Function words ("the", "to") are ambiguous out of context.
+  if (card.category === 'basics' && clozeOf(card)) return EXERCISE.CLOZE;
   const types = [EXERCISE.TYPE_EN, EXERCISE.LISTEN_TYPE];
   if (clozeOf(card)) types.push(EXERCISE.CLOZE);
   if (canBuild(card)) return round % 2 === 0 ? EXERCISE.BUILD : EXERCISE.TYPE_EN;

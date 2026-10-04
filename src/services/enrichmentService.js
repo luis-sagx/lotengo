@@ -7,6 +7,7 @@
 
 import { getDatabase } from '../database/database';
 import { getWordImageUri } from './imageService';
+import { registerAudio } from './audioService';
 
 const DICT_URL = 'https://api.dictionaryapi.dev/api/v2/entries/en/';
 
@@ -118,11 +119,13 @@ async function doEnrich(word) {
     phonetic: dict?.phonetic || word.phonetic || null,
     audio_url: dict?.audio_url || word.audio_url || null,
     definition_en: dict?.definition_en || word.definition_en || null,
-    example_en: dict?.example_en || word.example_en || null,
+    // Seeded Tatoeba examples carry a translation; keep them over dictionary ones.
+    example_en: word.example_en || dict?.example_en || null,
     image_url: newImage || word.image_url || null,
     // Finalize only when nothing useful remains to fetch.
     enriched: !dictPending && !imagePending ? 1 : 0,
   };
+  registerAudio(merged.english_word, merged.audio_url);
 
   try {
     const db = getDatabase();
@@ -155,7 +158,10 @@ async function doEnrich(word) {
  */
 export async function enrichWord(word) {
   if (!word || !word.id) return word;
-  if (word.enriched) return word;
+  if (word.enriched) {
+    registerAudio(word.english_word, word.audio_url);
+    return word;
+  }
   if (inflight.has(word.id)) return inflight.get(word.id);
 
   const promise = doEnrich(word);

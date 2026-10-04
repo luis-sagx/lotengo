@@ -194,7 +194,12 @@ export default function SettingsScreen({ navigation }) {
             <Text style={styles.aboutApp}>saflash</Text>
             <Text style={styles.aboutVersion}>Versión 1.0.0</Text>
             <Text style={styles.aboutDescription}>
-              Aprende inglés desde cero con una ruta guiada A1–C1, ejercicios y repetición espaciada.
+              Aprende vocabulario en inglés con repetición espaciada (FSRS) y recuerdo activo.
+            </Text>
+            <Text style={styles.aboutCredits}>
+              Oraciones de ejemplo: Tatoeba (tatoeba.org), CC BY 2.0 FR. Frecuencia de palabras:
+              FrequencyWords de Hermit Dave (OpenSubtitles 2018), CC BY-SA 4.0. Pronunciación y
+              definiciones: Free Dictionary API. Imágenes: Wikipedia.
             </Text>
           </View>
         </View>
@@ -207,6 +212,14 @@ export default function SettingsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  aboutCredits: {
+    fontFamily: FONT_FAMILY.regular,
+    fontSize: 12,
+    lineHeight: 18,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginTop: SPACING.sm,
+  },
   container: {
     flex: 1,
     backgroundColor: COLORS.warmParchment,

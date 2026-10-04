@@ -107,7 +107,7 @@ export async function searchCards(query, limit = 50) {
 const CARD_COLUMNS = `
   COALESCE(w.english_word, p.phrase_en) AS en,
   COALESCE(w.spanish_trans, p.phrase_es) AS es,
-  w.phonetic, w.example_en, w.example_es, w.image_url, w.enriched, w.definition_en, p.context,
+  w.phonetic, w.example_en, w.example_es, w.image_url, w.audio_url, w.enriched, w.definition_en, p.context,
   COALESCE(w.category, p.category) AS category`;
 
 const CARD_JOIN = `
@@ -147,7 +147,7 @@ export async function getNewCards(level, limit) {
   const [words, phrases] = await Promise.all([
     db.getAllAsync(
       `SELECT 'word' AS card_type, w.id, w.english_word AS en, w.spanish_trans AS es,
-              w.phonetic, w.example_en, w.example_es, w.image_url, w.enriched, w.definition_en,
+              w.phonetic, w.example_en, w.example_es, w.image_url, w.audio_url, w.enriched, w.definition_en,
               NULL AS context, w.category
        FROM words w
        LEFT JOIN user_progress up ON up.card_type = 'word' AND up.card_id = w.id

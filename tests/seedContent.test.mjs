@@ -63,3 +63,19 @@ test('starts the path with greetings for absolute beginners', () => {
   assert.equal(lessons[0].level, 'A1');
   assert.equal(lessons[0].category, 'greetings');
 });
+
+test('most words come with a real, translated example that contains them', () => {
+  const withExample = WORDS_SEED.filter(word => word.example_en);
+  assert.ok(withExample.length / WORDS_SEED.length > 0.8, `${withExample.length}/${WORDS_SEED.length}`);
+  for (const word of withExample) {
+    assert.ok(word.example_es, word.english_word);
+    assert.doesNotMatch(word.example_en, /^The word "/, word.english_word);
+    assert.match(word.example_en.toLowerCase(), new RegExp(`\\b${word.english_word.toLowerCase()}\\b`), word.english_word);
+  }
+});
+
+test('each level lists its most frequent words first', () => {
+  const a1 = WORDS_BY_LEVEL.A1.map(word => word.english_word);
+  assert.ok(a1.indexOf('you') < a1.indexOf('tomato'));
+  assert.ok(a1.indexOf('you') < 5);
+});

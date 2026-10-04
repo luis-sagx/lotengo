@@ -72,17 +72,17 @@ async function seedWordsForLevel(db, level) {
   await db.withTransactionAsync(async () => {
     for (let i = 0; i < words.length; i += BATCH) {
       const batch = words.slice(i, i + BATCH);
-      const placeholders = batch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
+      const placeholders = batch.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(', ');
       const values = batch.flatMap(w => [
         w.english_word, w.spanish_trans, w.phonetic || null,
-        w.category, w.subcategory || null, w.frequency_rank,
+        w.category, w.subcategory || null, w.frequency_rank, w.per_million || 0,
         w.difficulty, w.image_url || null, w.audio_url || null,
         w.example_en || null, w.example_es || null,
       ]);
       await db.runAsync(
         `INSERT INTO words
           (english_word, spanish_trans, phonetic, category, subcategory,
-           frequency_rank, difficulty, image_url, audio_url, example_en, example_es)
+           frequency_rank, per_million, difficulty, image_url, audio_url, example_en, example_es)
          VALUES ${placeholders}`,
         values
       );

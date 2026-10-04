@@ -7,7 +7,7 @@ import { COLORS } from '../theme/colors';
 import { RADIUS, SPACING, SHADOW } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 import CardImage from './CardImage';
-import { speak, speakAuto, speakSlow } from '../services/audioService';
+import { speak, speakAuto, speakSlow, registerAudio } from '../services/audioService';
 import { playEffect } from '../services/soundService';
 import { enrichWord } from '../services/enrichmentService';
 import { EXERCISE, TYPED } from '../services/quiz.mjs';
@@ -41,6 +41,7 @@ export default function Exercise({ step, onCheck, onNext, grading }) {
     setTiles([]);
     setTyped('');
     setResult(null);
+    if (step.card.type === 'word') registerAudio(step.card.en, step.card.audio_url);
     // Listening needs the audio regardless of the auto-speak setting.
     if (LISTENING.has(step.type)) speak(step.card.en);
     else if (!SILENT.has(step.type)) speakAuto(step.card.en);
@@ -167,6 +168,7 @@ export default function Exercise({ step, onCheck, onNext, grading }) {
           </Text>
           {(!correct || result.typo) && <Text style={styles.feedbackAnswer}>{step.answer}</Text>}
           <Text style={styles.feedbackMeaning}>{step.card.en} = {step.card.es}</Text>
+          {step.card.falseFriend ? <Text style={styles.falseFriend}>⚠️ {step.card.falseFriend}</Text> : null}
           {grading ? (
             <>
               <Text style={styles.gradeHint}>¿Qué tan bien lo recordaste?</Text>
@@ -229,7 +231,7 @@ function IntroCard({ card }) {
   useEffect(() => {
     let alive = true;
     setData(card);
-    if (card.type === 'word' && !card.enriched) {
+    if (card.type === 'word') {
       enrichWord({ ...card, english_word: card.en }).then(updated => {
         if (alive && updated) setData(prev => ({ ...prev, ...updated }));
       });
@@ -252,6 +254,13 @@ function IntroCard({ card }) {
       {data.phonetic ? <Text style={styles.phonetic}>{data.phonetic}</Text> : null}
       <Text style={styles.translation}>{card.es}</Text>
       {card.type === 'phrase' && card.context ? <Text style={styles.example}>{card.context}</Text> : null}
+      {data.example_en ? (
+        <TouchableOpacity style={styles.sentence} onPress={() => speak(data.example_en)} accessibilityLabel={`Escuchar el ejemplo: ${data.example_en}`}>
+          <Text style={styles.sentenceEn}>{data.example_en}</Text>
+          {data.example_es ? <Text style={styles.example}>{data.example_es}</Text> : null}
+        </TouchableOpacity>
+      ) : null}
+      {card.falseFriend ? <Text style={styles.falseFriend}>⚠️ {card.falseFriend}</Text> : null}
     </ScrollView>
   );
 }
@@ -328,6 +337,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     textAlign: 'center',
+  },
+  sentence: {
+    marginTop: SPACING.base,
+    padding: SPACING.md,
+    borderRadius: RADIUS.lg,
+    backgroundColor: COLORS.sageCream,
+    alignSelf: 'stretch',
+    gap: 2,
+  },
+  sentenceEn: {
+    fontFamily: FONT_FAMILY.semiBold,
+    fontSize: 17,
+    color: COLORS.oliveInk,
+    textAlign: 'center',
+  },
+  falseFriend: {
+    fontFamily: FONT_FAMILY.medium,
+    fontSize: 14,
+    lineHeight: 20,
+    color: COLORS.goldText,
+    textAlign: 'center',
+    marginTop: SPACING.xs,
   },
   instruction: {
     fontFamily: FONT_FAMILY.bold,

@@ -5,7 +5,7 @@ let db = null;
 
 // Bump when seed content or the path changes: content tables are rebuilt and
 // user progress is remapped onto the new rows (see seedRunner.remapProgress).
-export const CONTENT_VERSION = 5;
+export const CONTENT_VERSION = 6;
 // Bump with a new MIGRATIONS entry when a user table changes. Databases from
 // before migrations existed (user_version < 10) held only dev data and are reset.
 const SCHEMA_BASE = 10;
@@ -86,6 +86,7 @@ export async function initDatabase() {
       category        TEXT    NOT NULL,
       subcategory     TEXT,
       frequency_rank  INTEGER NOT NULL,
+      per_million     REAL    DEFAULT 0,
       difficulty      TEXT    DEFAULT 'A1',
       image_url       TEXT,
       audio_url       TEXT,
