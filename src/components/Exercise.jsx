@@ -1,6 +1,7 @@
-// saflash — Lesson exercise views: intro card, multiple choice, listening, tile builder.
+// saflash — Exercise views: intro card, multiple choice, listening, tile builder,
+// typed recall (Spanish prompt, sentence cloze, dictation).
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { RADIUS, SPACING, SHADOW } from '../theme/spacing';
@@ -9,29 +10,40 @@ import CardImage from './CardImage';
 import { speak, speakAuto, speakSlow } from '../services/audioService';
 import { playEffect } from '../services/soundService';
 import { enrichWord } from '../services/enrichmentService';
-import { EXERCISE } from '../services/quiz.mjs';
+import { EXERCISE, TYPED } from '../services/quiz.mjs';
+import RatingButtons from './RatingButtons';
 
 const INSTRUCTIONS = {
   [EXERCISE.CHOOSE_ES]: '¿Qué significa?',
   [EXERCISE.CHOOSE_EN]: '¿Cómo se dice en inglés?',
   [EXERCISE.LISTEN]: 'Escucha y elige lo que oyes',
   [EXERCISE.BUILD]: 'Ordena las palabras en inglés',
+  [EXERCISE.TYPE_EN]: 'Escríbelo en inglés',
+  [EXERCISE.CLOZE]: 'Completa la oración',
+  [EXERCISE.LISTEN_TYPE]: 'Escucha y escribe lo que oyes',
 };
 
-// Renders the current step. `onCheck(value)` returns whether it was right;
-// `onNext()` advances once the learner has seen the feedback.
-export default function Exercise({ step, onCheck, onNext }) {
+// Audio would give the answer away in these.
+const SILENT = new Set([EXERCISE.CHOOSE_EN, EXERCISE.BUILD, EXERCISE.TYPE_EN, EXERCISE.CLOZE]);
+const LISTENING = new Set([EXERCISE.LISTEN, EXERCISE.LISTEN_TYPE]);
+
+// Renders the current step. `onCheck(value)` returns { correct, typo, suggested };
+// `onNext()` advances once the learner has seen the feedback. With `grading`
+// ({ intervals, onGrade }) the feedback offers the four FSRS grades instead.
+export default function Exercise({ step, onCheck, onNext, grading }) {
   const [selected, setSelected] = useState(null);
   const [tiles, setTiles] = useState([]);
-  const [result, setResult] = useState(null); // null | true | false
+  const [typed, setTyped] = useState('');
+  const [result, setResult] = useState(null); // null | { correct, typo, suggested }
 
   useEffect(() => {
     setSelected(null);
     setTiles([]);
+    setTyped('');
     setResult(null);
     // Listening needs the audio regardless of the auto-speak setting.
-    if (step.type === EXERCISE.LISTEN) speak(step.card.en);
-    else if (step.type !== EXERCISE.CHOOSE_EN && step.type !== EXERCISE.BUILD) speakAuto(step.card.en);
+    if (LISTENING.has(step.type)) speak(step.card.en);
+    else if (!SILENT.has(step.type)) speakAuto(step.card.en);
   }, [step]);
 
   if (step.type === EXERCISE.INTRO) {
@@ -45,13 +57,18 @@ export default function Exercise({ step, onCheck, onNext }) {
     );
   }
 
-  const value = step.type === EXERCISE.BUILD ? tiles.map(i => step.tiles[i]).join(' ') : selected;
+  const isTyped = TYPED.has(step.type);
+  const value = step.type === EXERCISE.BUILD
+    ? tiles.map(i => step.tiles[i]).join(' ')
+    : isTyped ? typed.trim() : selected;
   const answered = result !== null;
+  const correct = result?.correct;
 
   const check = () => {
-    const correct = onCheck(value);
-    setResult(correct);
-    playEffect(correct ? 'correct' : 'wrong');
+    if (!value || answered) return;
+    const outcome = onCheck(value);
+    setResult(outcome);
+    playEffect(outcome.correct ? 'correct' : 'wrong');
     // Let the chime finish before reading the answer aloud.
     setTimeout(() => speakAuto(step.card.en), 400);
   };
@@ -61,7 +78,7 @@ export default function Exercise({ step, onCheck, onNext }) {
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={styles.instruction}>{INSTRUCTIONS[step.type]}</Text>
 
-        {step.type === EXERCISE.LISTEN ? (
+        {LISTENING.has(step.type) ? (
           <View style={styles.listenRow}>
             <TouchableOpacity
               style={styles.listenButton}
@@ -78,6 +95,15 @@ export default function Exercise({ step, onCheck, onNext }) {
               <Text style={styles.slowIcon}>🐢</Text>
             </TouchableOpacity>
           </View>
+        ) : step.type === EXERCISE.CLOZE ? (
+          <View style={styles.clozeBox}>
+            <Text style={styles.clozeSentence}>
+              {step.cloze.before}
+              <Text style={styles.clozeBlank}>{answered ? step.cloze.answer : '_____'}</Text>
+              {step.cloze.after}
+            </Text>
+            <Text style={styles.clozeHint}>{step.cloze.translation}</Text>
+          </View>
         ) : (
           <View style={styles.promptRow}>
             {step.type === EXERCISE.CHOOSE_ES && (
@@ -89,14 +115,30 @@ export default function Exercise({ step, onCheck, onNext }) {
           </View>
         )}
 
-        {step.type === EXERCISE.BUILD ? (
+        {isTyped ? (
+          <TextInput
+            style={[styles.input, answered && (correct ? styles.optionRight : styles.optionWrong)]}
+            value={typed}
+            onChangeText={setTyped}
+            onSubmitEditing={check}
+            editable={!answered}
+            autoFocus
+            autoCapitalize="none"
+            autoCorrect={false}
+            spellCheck={false}
+            returnKeyType="done"
+            placeholder="Escribe en inglés"
+            placeholderTextColor={COLORS.textPlaceholder}
+            accessibilityLabel="Tu respuesta en inglés"
+          />
+        ) : step.type === EXERCISE.BUILD ? (
           <TileBuilder step={step} tiles={tiles} setTiles={setTiles} disabled={answered} />
         ) : (
           <View style={styles.options}>
             {step.options.map(option => {
               const isSelected = selected === option;
               const showRight = answered && option === step.answer;
-              const showWrong = answered && isSelected && !result;
+              const showWrong = answered && isSelected && !correct;
               return (
                 <TouchableOpacity
                   key={option}
@@ -119,19 +161,24 @@ export default function Exercise({ step, onCheck, onNext }) {
       </ScrollView>
 
       {answered ? (
-        <Footer tone={result ? 'right' : 'wrong'}>
-          <Text style={[styles.feedbackTitle, { color: result ? COLORS.successGreen : COLORS.dangerOrange }]}>
-            {result ? '¡Correcto!' : 'Respuesta correcta:'}
+        <Footer tone={correct ? 'right' : 'wrong'}>
+          <Text style={[styles.feedbackTitle, { color: correct ? COLORS.successGreen : COLORS.dangerOrange }]}>
+            {!correct ? 'Respuesta correcta:' : result.typo ? 'Casi perfecto, se escribe:' : '¡Correcto!'}
           </Text>
-          {!result && <Text style={styles.feedbackAnswer}>{step.answer}</Text>}
-          {step.card.en !== step.answer && (
-            <Text style={styles.feedbackMeaning}>{step.card.en} = {step.card.es}</Text>
+          {(!correct || result.typo) && <Text style={styles.feedbackAnswer}>{step.answer}</Text>}
+          <Text style={styles.feedbackMeaning}>{step.card.en} = {step.card.es}</Text>
+          {grading ? (
+            <>
+              <Text style={styles.gradeHint}>¿Qué tan bien lo recordaste?</Text>
+              <RatingButtons onPress={grading.onGrade} intervals={grading.intervals} suggested={result.suggested} />
+            </>
+          ) : (
+            <PrimaryButton
+              label="Continuar"
+              color={correct ? COLORS.successGreen : COLORS.dangerOrange}
+              onPress={onNext}
+            />
           )}
-          <PrimaryButton
-            label="Continuar"
-            color={result ? COLORS.successGreen : COLORS.dangerOrange}
-            onPress={onNext}
-          />
         </Footer>
       ) : (
         <Footer>
@@ -426,6 +473,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: COLORS.textSecondary,
     marginBottom: SPACING.xs,
+  },
+  input: {
+    minHeight: 56,
+    paddingHorizontal: SPACING.base,
+    borderRadius: RADIUS.lg,
+    borderWidth: 2,
+    borderBottomWidth: 4,
+    borderColor: COLORS.borderSage,
+    backgroundColor: COLORS.surfaceWhite,
+    fontFamily: FONT_FAMILY.semiBold,
+    fontSize: 20,
+    color: COLORS.textInput,
+  },
+  clozeBox: {
+    marginBottom: SPACING.xl,
+    gap: SPACING.sm,
+  },
+  clozeSentence: {
+    fontFamily: FONT_FAMILY.semiBold,
+    fontSize: 22,
+    lineHeight: 32,
+    color: COLORS.oliveInk,
+  },
+  clozeBlank: {
+    fontFamily: FONT_FAMILY.bold,
+    color: COLORS.accentOrange,
+  },
+  clozeHint: {
+    fontFamily: FONT_FAMILY.regular,
+    fontSize: 15,
+    color: COLORS.textSecondary,
+  },
+  gradeHint: {
+    fontFamily: FONT_FAMILY.medium,
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: SPACING.sm,
   },
   primary: {
     height: 52,

@@ -7,7 +7,7 @@ import {
 } from '../database/sessionRepository';
 import { GRADE } from '../services/srs.mjs';
 import { scoreLesson } from '../services/lessonScoring.mjs';
-import { planSession, retryExercise, checkAnswer, toCard } from '../services/quiz.mjs';
+import { planSession, retryExercise, gradeAnswer, toCard } from '../services/quiz.mjs';
 import { xpForSession } from '../services/gamification.mjs';
 
 // The first answer to each card schedules it with FSRS.
@@ -89,10 +89,11 @@ export function useLessonSession(lessonId) {
     setCompleted({ ...scored, correct, wrong: firstTry.length - correct, durationSecs, nextLessonId, xp });
   }, [lessonId]);
 
-  // Checks an answer for the current step; returns whether it was right.
+  // Checks an answer for the current step; returns { correct, typo }.
   const answer = useCallback((value) => {
     const step = steps[index];
-    const correct = checkAnswer(step, value);
+    const result = gradeAnswer(step, value);
+    const { correct } = result;
     const { card } = step;
     if (!results.current.has(card.key)) {
       results.current.set(card.key, correct);
@@ -108,7 +109,7 @@ export function useLessonSession(lessonId) {
       setSteps(prev => [...prev, retryExercise(step, pool.current)]);
       addHearts(-1).then(setHearts).catch(err => console.error('Error saving hearts:', err));
     }
-    return correct;
+    return result;
   }, [steps, index]);
 
   const next = useCallback(() => {
