@@ -93,7 +93,7 @@ export async function searchCards(query, limit = 50) {
 const CARD_COLUMNS = `
   COALESCE(w.english_word, p.phrase_en) AS en,
   COALESCE(w.spanish_trans, p.phrase_es) AS es,
-  w.phonetic, w.example_en, w.example_es, w.image_url, w.enriched,
+  w.phonetic, w.example_en, w.example_es, w.image_url, w.enriched, w.definition_en, p.context,
   COALESCE(w.category, p.category) AS category`;
 
 // Due cards first; with nothing due, practice recently studied cards instead.

@@ -1,4 +1,4 @@
-// saflash — Lesson and review quiz screen.
+// saflash — Path lesson quiz screen.
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,7 +27,7 @@ export default function StudyLessonScreen({ navigation, route }) {
 
   useEffect(() => {
     async function loadSuggestion() {
-      if (!session.completed || session.review) return;
+      if (!session.completed) return;
       const [config, recentAccuracies, completedCount] = await Promise.all([
         getConfig(),
         getRecentAccuracies(3),
@@ -41,7 +41,7 @@ export default function StudyLessonScreen({ navigation, route }) {
       }));
     }
     loadSuggestion();
-  }, [session.completed, session.review]);
+  }, [session.completed]);
 
   const acceptSuggestion = async () => {
     if (!suggestion) return;
@@ -75,7 +75,7 @@ export default function StudyLessonScreen({ navigation, route }) {
         <Header navigation={navigation} current={0} total={1} />
         <View style={styles.empty}>
           <Text style={styles.emptyText}>
-            {session.error || (session.review ? 'No hay tarjetas para repasar.' : 'No hay tarjetas en esta lección.')}
+            {session.error || 'No hay tarjetas en esta lección.'}
           </Text>
         </View>
       </SafeAreaView>
@@ -88,9 +88,8 @@ export default function StudyLessonScreen({ navigation, route }) {
         <SessionSummary
           correct={session.completed.correct}
           wrong={session.completed.wrong}
-          stars={session.review ? null : session.completed.stars}
+          stars={session.completed.stars}
           xp={session.completed.xp}
-          heartGained={session.review}
           durationSecs={session.completed.durationSecs}
           onContinue={() => navigation.goBack()}
         />
@@ -130,7 +129,7 @@ export default function StudyLessonScreen({ navigation, route }) {
         navigation={navigation}
         current={session.index}
         total={session.total}
-        hearts={session.review ? null : session.hearts}
+        hearts={session.hearts}
         combo={session.combo}
       />
       {session.step && <Exercise step={session.step} onCheck={session.answer} onNext={session.next} />}

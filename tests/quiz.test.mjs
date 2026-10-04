@@ -50,12 +50,6 @@ test('lesson plan introduces every card before quizzing it, once each', () => {
   }
 });
 
-test('review plan has no intros', () => {
-  const steps = planSession(words, words, { intro: false, rng: seeded() });
-  assert.equal(steps.length, words.length);
-  assert.ok(steps.every(s => s.type !== EXERCISE.INTRO));
-});
-
 test('retry uses a different exercise type for the same card', () => {
   const ex = makeExercise(words[0], words, EXERCISE.CHOOSE_ES, seeded());
   const retry = retryExercise(ex, words, seeded());

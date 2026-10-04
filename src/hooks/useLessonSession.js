@@ -1,26 +1,15 @@
-// saflash — Quiz session for a path lesson (intro + quiz) or a review (quiz only).
+// saflash — Quiz session for a path lesson: intro new cards, then quiz them.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getLessonCards, completeLesson } from '../database/lessonsRepository';
-import { getProgress, upsertProgress, getDueCards, getDistractorCards } from '../database/progressRepository';
+import { getProgress, upsertProgress, getDistractorCards } from '../database/progressRepository';
 import {
   saveSession, incrementTotalStudied, updateStreak, setCurrentLesson, getConfig, getHearts, addHearts,
 } from '../database/sessionRepository';
 import { calculateNextReview, getDefaultProgress } from '../services/spacedRepetition';
 import { scoreLesson } from '../services/lessonScoring.mjs';
-import { planSession, retryExercise, checkAnswer } from '../services/quiz.mjs';
+import { planSession, retryExercise, checkAnswer, toCard } from '../services/quiz.mjs';
 import { xpForSession } from '../services/gamification.mjs';
 import { RATING } from '../utils/constants';
-
-function toQuizCard(row) {
-  const type = row.card_type;
-  return {
-    ...row,
-    key: `${type}-${row.id}`,
-    type,
-    en: row.en ?? row.english_word ?? row.phrase_en,
-    es: row.es ?? row.spanish_trans ?? row.phrase_es,
-  };
-}
 
 async function recordAnswer(card, correct) {
   const progress = await getProgress(card.type, card.id);
@@ -29,7 +18,6 @@ async function recordAnswer(card, correct) {
 }
 
 export function useLessonSession(lessonId) {
-  const review = lessonId == null;
   const [steps, setSteps] = useState([]);
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -49,18 +37,18 @@ export function useLessonSession(lessonId) {
       setError(null);
       const [config, heartState] = await Promise.all([getConfig(), getHearts()]);
       setHearts(heartState);
-      setOutOfHearts(!review && heartState.hearts === 0);
+      setOutOfHearts(heartState.hearts === 0);
       const [rows, distractors] = await Promise.all([
-        review ? getDueCards() : getLessonCards(lessonId),
+        getLessonCards(lessonId),
         getDistractorCards(config?.level || 'A1'),
       ]);
-      const cards = rows.map(toQuizCard);
-      pool.current = [...cards, ...distractors.map(toQuizCard)];
+      const cards = rows.map(toCard);
+      pool.current = [...cards, ...distractors.map(toCard)];
       results.current = new Map();
       maxCombo.current = 0;
       setCombo(0);
       sessionStart.current = Date.now();
-      setSteps(planSession(cards, pool.current, { intro: !review }));
+      setSteps(planSession(cards, pool.current));
       setIndex(0);
       setCompleted(null);
     } catch (err) {
@@ -69,7 +57,7 @@ export function useLessonSession(lessonId) {
     } finally {
       setLoading(false);
     }
-  }, [lessonId, review]);
+  }, [lessonId]);
 
   useEffect(() => {
     load();
@@ -80,17 +68,13 @@ export function useLessonSession(lessonId) {
     const scored = scoreLesson(firstTry);
     const correct = firstTry.filter(Boolean).length;
     const durationSecs = Math.floor((Date.now() - sessionStart.current) / 1000);
-    const xp = xpForSession({ correct, total: firstTry.length, review, maxCombo: maxCombo.current });
+    const xp = xpForSession({ correct, total: firstTry.length, maxCombo: maxCombo.current });
 
-    let nextLessonId = null;
-    if (!review) {
-      ({ nextLessonId } = await completeLesson(lessonId, scored.accuracy, scored.stars));
-      if (nextLessonId) await setCurrentLesson(nextLessonId);
-    }
+    const { nextLessonId } = await completeLesson(lessonId, scored.accuracy, scored.stars);
+    if (nextLessonId) await setCurrentLesson(nextLessonId);
     await Promise.all([
       saveSession({
-        session_date: new Date().toISOString().split('T')[0],
-        session_type: review ? 'review' : 'lesson',
+        session_type: 'lesson',
         cards_studied: firstTry.length,
         cards_correct: correct,
         cards_medium: 0,
@@ -101,11 +85,9 @@ export function useLessonSession(lessonId) {
       incrementTotalStudied(firstTry.length),
       updateStreak(),
     ]);
-    // Finishing a review earns a heart back.
-    if (review) setHearts(await addHearts(1));
 
     setCompleted({ ...scored, correct, wrong: firstTry.length - correct, durationSecs, nextLessonId, xp });
-  }, [lessonId, review]);
+  }, [lessonId]);
 
   // Checks an answer for the current step; returns whether it was right.
   const answer = useCallback((value) => {
@@ -124,15 +106,14 @@ export function useLessonSession(lessonId) {
     } else {
       setCombo(0);
       setSteps(prev => [...prev, retryExercise(step, pool.current)]);
-      // Mistakes cost a heart in lessons; reviews are free practice.
-      if (!review) addHearts(-1).then(setHearts).catch(err => console.error('Error saving hearts:', err));
+      addHearts(-1).then(setHearts).catch(err => console.error('Error saving hearts:', err));
     }
     return correct;
-  }, [steps, index, review]);
+  }, [steps, index]);
 
   const next = useCallback(() => {
     // Block only after the learner has seen the feedback for the last mistake.
-    if (!review && hearts?.hearts === 0) {
+    if (hearts?.hearts === 0) {
       setOutOfHearts(true);
       return;
     }
@@ -144,7 +125,7 @@ export function useLessonSession(lessonId) {
         setError('No se pudo guardar el progreso.');
       });
     }
-  }, [index, steps.length, finish, review, hearts]);
+  }, [index, steps.length, finish, hearts]);
 
   return {
     step: steps[index] || null,
@@ -155,7 +136,6 @@ export function useLessonSession(lessonId) {
     completed,
     answer,
     next,
-    review,
     hearts,
     combo,
     outOfHearts,

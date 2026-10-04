@@ -11,6 +11,18 @@ export const EXERCISE = {
 
 const OPTION_COUNT = 4;
 
+// Normalizes a words/phrases DB row into a card.
+export function toCard(row) {
+  const type = row.card_type;
+  return {
+    ...row,
+    key: `${type}-${row.id}`,
+    type,
+    en: row.en ?? row.english_word ?? row.phrase_en,
+    es: row.es ?? row.spanish_trans ?? row.phrase_es,
+  };
+}
+
 export function shuffle(items, rng = Math.random) {
   const result = [...items];
   for (let i = result.length - 1; i > 0; i -= 1) {
@@ -83,8 +95,8 @@ export function checkAnswer(exercise, answer) {
   return normalize(String(answer ?? '')) === normalize(exercise.answer);
 }
 
-// New cards: introduce two, then quiz those two. Review: quiz only.
-export function planSession(cards, pool, { intro = true, rng = Math.random } = {}) {
+// Introduce two new cards, then quiz those two.
+export function planSession(cards, pool, { rng = Math.random } = {}) {
   const fullPool = [...pool, ...cards.filter(c => !pool.some(p => p.key === c.key))];
   const steps = [];
   let round = 0;
@@ -92,11 +104,6 @@ export function planSession(cards, pool, { intro = true, rng = Math.random } = {
     const types = exerciseTypesFor(card);
     steps.push(makeExercise(card, fullPool, types[round++ % types.length], rng));
   };
-
-  if (!intro) {
-    shuffle(cards, rng).forEach(quiz);
-    return steps;
-  }
 
   for (let i = 0; i < cards.length; i += 2) {
     const pair = cards.slice(i, i + 2);
