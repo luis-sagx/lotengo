@@ -15,8 +15,8 @@ Nombres visibles: A1 Principiante, A2 Básico, B1 Intermedio, B2 Avanzado, C1 Ex
 Sin migración de base de datos. Sin duplicados de palabra/frase. `npm run validate` y `npm test` verdes. Heurística ~400 líneas por tarea (solo planificación).
 
 ## Tareas
-- [ ] T1 — Test de ubicación: banco curado `src/seeds/placementItems.mjs` (3 preguntas × 5 niveles = 15), aprobar con 2/3, "No sé", puntuación sin racha de suerte; pantalla actualizada; test que demuestre que responder al azar/"No sé" no pasa de A1/A2. Archivos: placementService.mjs, PlacementTestScreen.jsx, placementItems.mjs, tests/placementService.test.mjs.
-- [ ] T2 — Etiquetas: `levels.mjs` (nombres/descripciones), ocultar código CEFR en SettingsScreen y PathScreen. Test levels.
+- [x] T1 — Test de ubicación: banco curado `src/seeds/placementItems.mjs` (3 preguntas × 5 niveles = 15), aprobar con 2/3, "No sé", puntuación sin racha de suerte; pantalla actualizada; test que demuestre que responder al azar/"No sé" no pasa de A1/A2. Archivos: placementService.mjs, PlacementTestScreen.jsx, placementItems.mjs, tests/placementService.test.mjs.
+- [x] T2 — Etiquetas: `levels.mjs` (nombres/descripciones), ocultar código CEFR en SettingsScreen y PathScreen. Test levels.
 - [ ] T3 — Palabras: reasignar niveles (mover filas entre a1…c1), añadir vocabulario nativo común, regenerar corpus si hay red.
 - [ ] T4 — Frases: completar B2/C1, añadir frases nativas comunes en el nivel correcto.
 
@@ -28,4 +28,4 @@ Sin migración de base de datos. Sin duplicados de palabra/frase. `npm run valid
 - Engram mirror `odd/placement-and-vocabulary-rework/tasks`: PENDIENTE (herramientas mem_* no disponibles en esta sesión).
 
 ## Progreso
-Creado el documento. Próximo paso: lanzar writers T1+T2, T3, T4.
+Creado el documento. T1 `08c11ff` y T2 `37371e8` completos (ruta delegada; `npm test` 56/56 y `npm run validate` correctos según el writer). Acumulado: 89 añadidas / 137 borradas. T3 y T4 en curso (delegados). Próximo paso: revisar y commitear T3/T4.
