@@ -17,8 +17,8 @@ Sin migración de base de datos. Sin duplicados de palabra/frase. `npm run valid
 ## Tareas
 - [x] T1 — Test de ubicación: banco curado `src/seeds/placementItems.mjs` (3 preguntas × 5 niveles = 15), aprobar con 2/3, "No sé", puntuación sin racha de suerte; pantalla actualizada; test que demuestre que responder al azar/"No sé" no pasa de A1/A2. Archivos: placementService.mjs, PlacementTestScreen.jsx, placementItems.mjs, tests/placementService.test.mjs.
 - [x] T2 — Etiquetas: `levels.mjs` (nombres/descripciones), ocultar código CEFR en SettingsScreen y PathScreen. Test levels.
-- [ ] T3 — Palabras: reasignar niveles (mover filas entre a1…c1), añadir vocabulario nativo común, regenerar corpus si hay red.
-- [ ] T4 — Frases: completar B2/C1, añadir frases nativas comunes en el nivel correcto.
+- [x] T3 — Palabras: reasignar niveles (mover filas entre a1…c1), añadir vocabulario nativo común, regenerar corpus si hay red.
+- [x] T4 — Frases: completar B2/C1, añadir frases nativas comunes en el nivel correcto.
 
 ## Configuración
 - TDD: desactivado (sin configuración ni instrucción que lo active); verificación ordinaria `npm run validate` y `npm test`. Runner: node --test.
@@ -28,4 +28,4 @@ Sin migración de base de datos. Sin duplicados de palabra/frase. `npm run valid
 - Engram mirror `odd/placement-and-vocabulary-rework/tasks`: PENDIENTE (herramientas mem_* no disponibles en esta sesión).
 
 ## Progreso
-Creado el documento. T1 `08c11ff` y T2 `37371e8` completos (ruta delegada; `npm test` 56/56 y `npm run validate` correctos según el writer). Acumulado: 89 añadidas / 137 borradas. T3 y T4 en curso (delegados). Próximo paso: revisar y commitear T3/T4.
+Creado el documento. T1 `08c11ff` y T2 `37371e8` completos (ruta delegada; `npm test` 56/56 y `npm run validate` correctos según el writer). Acumulado: 89 añadidas / 137 borradas. T4 `63ea296` (frases: A1 72, A2 272, B1 251, B2 74, C1 55) y T3 (palabras 1600→1886; 130 movidas, ~285 añadidas, 10 palabras gramaticales quitadas de A1; corpus regenerado, 1617/1886 con ejemplo) completos; ruta delegada. Ítems del test ajustados para coincidir con los niveles nuevos (borrow A2, scarce C1). `npm test` 56/56 y `npm run validate` correctos. Niveles basados en juicio sobre Oxford 3000/5000, no en la lista literal. Próximo paso: decidir publicación (sin PR creado).
