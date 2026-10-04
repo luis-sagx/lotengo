@@ -169,6 +169,9 @@ export async function initDatabase() {
     CREATE INDEX IF NOT EXISTS idx_words_difficulty  ON words(difficulty);
     CREATE INDEX IF NOT EXISTS idx_words_frequency   ON words(frequency_rank);
     CREATE INDEX IF NOT EXISTS idx_phrases_category  ON phrases(category);
+    CREATE INDEX IF NOT EXISTS idx_phrases_difficulty ON phrases(difficulty);
+    CREATE INDEX IF NOT EXISTS idx_words_english     ON words(english_word);
+    CREATE INDEX IF NOT EXISTS idx_sessions_date     ON study_sessions(session_date);
     CREATE INDEX IF NOT EXISTS idx_progress_review   ON user_progress(next_review);
     CREATE INDEX IF NOT EXISTS idx_progress_status   ON user_progress(status);
     CREATE INDEX IF NOT EXISTS idx_progress_card     ON user_progress(card_type, card_id);

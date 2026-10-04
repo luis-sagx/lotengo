@@ -96,10 +96,10 @@ export async function updateStreak() {
 }
 
 export async function incrementTotalStudied(count) {
-  const config = await getConfig();
-  const newTotal = (config.total_studied || 0) + count;
-  await updateConfig({ total_studied: newTotal });
-  return newTotal;
+  await getDatabase().runAsync(
+    'UPDATE user_config SET total_studied = COALESCE(total_studied, 0) + ? WHERE id = 1',
+    [count]
+  );
 }
 
 export async function updateDailyGoal(goal) {

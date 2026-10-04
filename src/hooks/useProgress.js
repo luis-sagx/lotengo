@@ -1,8 +1,7 @@
 // saflash — Progress/stats hook
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { getStudyStats, getTodayStats } from '../database/progressRepository';
-import { getConfig } from '../database/sessionRepository';
-import { getWeekStats } from '../database/sessionRepository';
+import { getConfig, getWeekStats } from '../database/sessionRepository';
 import { getTotalWordsCount } from '../database/wordsRepository';
 import { getTotalPhrasesCount } from '../database/phrasesRepository';
 import { checkAchievements } from '../utils/formatters';
@@ -71,10 +70,6 @@ export function useProgress() {
       setStats(prev => ({ ...prev, loading: false }));
     }
   }, [setStreakDays, setTotalStudied]);
-
-  useEffect(() => {
-    loadStats();
-  }, [loadStats]);
 
   return { ...stats, refresh: loadStats };
 }

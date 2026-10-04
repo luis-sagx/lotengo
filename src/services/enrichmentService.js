@@ -86,10 +86,13 @@ async function doEnrich(word) {
   // Fetch dictionary data and (maybe) image in parallel; neither blocks the other.
   // The image promise distinguishes "no image" (resolves null) from a transient
   // failure (rejects), so we know whether retrying later could still help.
-  const [dict, imageResult] = await Promise.all([
+  // dictResult: null = transient failure, { data: null } = word not in dictionary.
+  const [dictResult, imageResult] = await Promise.all([
     fetchWithTimeout(`${DICT_URL}${encodeURIComponent(term)}`)
-      .then(r => (r.ok ? r.json() : null))
-      .then(parseDictionary)
+      .then(r => {
+        if (r.status === 404) return { data: null };
+        return r.ok ? r.json().then(json => ({ data: parseDictionary(json) })) : null;
+      })
       .catch(() => null),
     wantsImage
       ? getWordImageUri(term).then(
@@ -102,11 +105,12 @@ async function doEnrich(word) {
   const newImage = imageResult.uri;
 
   // What might still improve on a later attempt?
-  const dictPending = !dict; // never got real definition/example/audio
+  const dict = dictResult?.data || null;
+  const dictPending = !dictResult; // transient failure; a 404 is final
   const imagePending = wantsImage && !newImage && imageResult.transient; // 429 etc.
 
   // If we gained nothing this time, don't touch the row — let it retry later.
-  const gainedSomething = !!dict || (!!newImage && newImage !== word.image_url);
+  const gainedSomething = !!dictResult || (!!newImage && newImage !== word.image_url);
   if (!gainedSomething && (dictPending || imagePending)) return word;
 
   const merged = {
@@ -125,7 +129,7 @@ async function doEnrich(word) {
     await db.runAsync(
       `UPDATE words
          SET phonetic = ?, audio_url = ?, definition_en = ?,
-             example_en = ?, image_url = ?, enriched = 1
+             example_en = ?, image_url = ?, enriched = ?
        WHERE id = ?`,
       [
         merged.phonetic,
@@ -133,6 +137,7 @@ async function doEnrich(word) {
         merged.definition_en,
         merged.example_en,
         merged.image_url,
+        merged.enriched,
         word.id,
       ]
     );

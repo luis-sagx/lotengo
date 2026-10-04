@@ -11,35 +11,22 @@ export async function getProgress(cardType, cardId) {
 
 export async function upsertProgress(cardType, cardId, progress) {
   const db = getDatabase();
-  const existing = await getProgress(cardType, cardId);
-
-  if (existing) {
-    await db.runAsync(
-      `UPDATE user_progress SET
-        status = ?, ease_factor = ?, interval_days = ?,
-        repetitions = ?, next_review = ?, last_review = ?,
-        correct_count = ?, wrong_count = ?
-       WHERE card_type = ? AND card_id = ?`,
-      [
-        progress.status, progress.ease_factor, progress.interval_days,
-        progress.repetitions, progress.next_review, progress.last_review,
-        progress.correct_count, progress.wrong_count,
-        cardType, cardId,
-      ]
-    );
-  } else {
-    await db.runAsync(
-      `INSERT INTO user_progress
-        (card_type, card_id, status, ease_factor, interval_days, repetitions, next_review, last_review, correct_count, wrong_count)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        cardType, cardId,
-        progress.status, progress.ease_factor, progress.interval_days,
-        progress.repetitions, progress.next_review, progress.last_review,
-        progress.correct_count, progress.wrong_count,
-      ]
-    );
-  }
+  await db.runAsync(
+    `INSERT INTO user_progress
+      (card_type, card_id, status, ease_factor, interval_days, repetitions, next_review, last_review, correct_count, wrong_count)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(card_type, card_id) DO UPDATE SET
+       status = excluded.status, ease_factor = excluded.ease_factor,
+       interval_days = excluded.interval_days, repetitions = excluded.repetitions,
+       next_review = excluded.next_review, last_review = excluded.last_review,
+       correct_count = excluded.correct_count, wrong_count = excluded.wrong_count`,
+    [
+      cardType, cardId,
+      progress.status, progress.ease_factor, progress.interval_days,
+      progress.repetitions, progress.next_review, progress.last_review,
+      progress.correct_count, progress.wrong_count,
+    ]
+  );
 }
 
 export async function toggleFavorite(cardType, cardId) {
