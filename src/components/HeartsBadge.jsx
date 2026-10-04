@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   },
   timer: {
     fontFamily: FONT_FAMILY.regular,
-    fontSize: 10,
+    fontSize: 12,
     color: COLORS.textSecondary,
   },
 });

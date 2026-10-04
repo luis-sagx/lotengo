@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   xp: {
     fontFamily: FONT_FAMILY.bold,
     fontSize: 32,
-    color: COLORS.amberGold,
+    color: COLORS.goldText,
     marginBottom: SPACING.sm,
   },
   heart: {
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   },
   stars: {
     fontSize: 40,
-    color: COLORS.amberGold,
+    color: COLORS.starYellow,
   },
   congrats: {
     fontFamily: FONT_FAMILY.bold,

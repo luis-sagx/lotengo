@@ -17,6 +17,7 @@ import { LEVEL_LABELS, LEVEL_SELF_DESCRIPTIONS } from '../utils/constants';
 import { getFirstLessonForLevel, unlockUpTo } from '../database/lessonsRepository';
 import { setCurrentLesson, setLevel, setPlacementDone } from '../database/sessionRepository';
 import { LEVELS } from '../utils/levels.mjs';
+import StatusBarScrim from '../components/StatusBarScrim';
 
 // Flattens units into banner + lesson rows with fixed heights for virtualization.
 function buildRows(units) {
@@ -177,6 +178,7 @@ export default function PathScreen({ navigation }) {
           <Text style={styles.continueText}>Continuar</Text>
         </TouchableOpacity>
       </View>
+      <StatusBarScrim />
     </View>
   );
 }

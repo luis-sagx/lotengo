@@ -17,7 +17,7 @@ const ONBOARDING_ICONS = {
 const ONBOARDING_COLORS = {
   slide1: COLORS.successGreen,
   slide2: COLORS.accentOrange,
-  slide3: COLORS.amberGold,
+  slide3: COLORS.goldText,
 };
 
 export default function OnboardingSlide({ index, title, description }) {

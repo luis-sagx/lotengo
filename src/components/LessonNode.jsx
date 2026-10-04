@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, DifficultyColors } from '../theme/colors';
+import { COLORS, unitColor } from '../theme/colors';
 import { RADIUS, SPACING } from '../theme/spacing';
 import { FONT_FAMILY } from '../theme/typography';
 
@@ -12,7 +12,7 @@ const OFFSETS = [0, 44, 66, 44, 0, -44, -66, -44];
 function LessonNode({ lesson, current, onPress }) {
   const locked = lesson.status === 'locked';
   const completed = lesson.status === 'completed';
-  const color = DifficultyColors[lesson.level] || COLORS.deepOlive;
+  const color = unitColor(lesson.unit_index);
   const offset = OFFSETS[lesson.lesson_index % OFFSETS.length];
 
   return (
@@ -38,7 +38,7 @@ function LessonNode({ lesson, current, onPress }) {
             color={locked ? COLORS.textPlaceholder : completed || current ? COLORS.surfaceWhite : color}
           />
         </TouchableOpacity>
-        <Text style={[styles.label, current && { color }]}>
+        <Text style={[styles.label, { color: current ? color : COLORS.starYellow }]}>
           {current ? 'EMPEZAR' : completed ? '★'.repeat(lesson.stars || 1) : ' '}
         </Text>
       </View>
@@ -72,8 +72,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: FONT_FAMILY.bold,
-    fontSize: 12,
-    color: COLORS.amberGold,
+    fontSize: 14,
     marginTop: SPACING.xs,
     letterSpacing: 0.5,
   },

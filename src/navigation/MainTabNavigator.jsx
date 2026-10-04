@@ -28,18 +28,16 @@ export default function MainTabNavigator() {
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: COLORS.deepOlive,
-        tabBarInactiveTintColor: COLORS.textPlaceholder,
+        tabBarInactiveTintColor: COLORS.textSecondary,
         tabBarLabelStyle: {
-          fontFamily: FONT_FAMILY.medium,
-          fontSize: 10,
+          fontFamily: FONT_FAMILY.semiBold,
+          fontSize: 12,
         },
         tabBarStyle: {
           backgroundColor: COLORS.surfaceWhite,
           borderTopColor: COLORS.borderSage,
           borderTopWidth: 1,
-          paddingBottom: 4,
-          paddingTop: 4,
-          height: 56,
+          paddingTop: 6,
         },
         headerShown: false,
       })}

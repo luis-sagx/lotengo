@@ -8,6 +8,7 @@ import { FONT_FAMILY } from '../theme/typography';
 import { useSettings } from '../hooks/useSettings';
 import { DAILY_GOAL_OPTIONS, LEVEL_LABELS } from '../utils/constants';
 import ScreenHeader from '../components/ScreenHeader';
+import StatusBarScrim from '../components/StatusBarScrim';
 
 export default function SettingsScreen({ navigation }) {
   const {
@@ -49,156 +50,159 @@ export default function SettingsScreen({ navigation }) {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <ScreenHeader title="Ajustes" />
+    <View style={styles.container}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <ScreenHeader title="Ajustes" />
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Mi nivel</Text>
-        <TouchableOpacity
-          style={styles.settingRow}
-          onPress={() => navigation.getParent()?.navigate('LevelPick', { mode: 'change' })}
-        >
-          <View style={styles.settingInfo}>
-            <Ionicons name="school" size={22} color={COLORS.oliveInk} />
-            <Text style={styles.settingLabel}>
-              {config?.level || 'A1'} · {LEVEL_LABELS[config?.level || 'A1']}
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={COLORS.textPlaceholder} />
-        </TouchableOpacity>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Mi nivel</Text>
+          <TouchableOpacity
+            style={styles.settingRow}
+            onPress={() => navigation.getParent()?.navigate('LevelPick', { mode: 'change' })}
+          >
+            <View style={styles.settingInfo}>
+              <Ionicons name="school" size={22} color={COLORS.oliveInk} />
+              <Text style={styles.settingLabel}>
+                {config?.level || 'A1'} · {LEVEL_LABELS[config?.level || 'A1']}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={COLORS.textPlaceholder} />
+          </TouchableOpacity>
+        </View>
 
-      {/* Daily goal */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Meta diaria de XP</Text>
-        <View style={styles.goalOptions}>
-          {DAILY_GOAL_OPTIONS.map(goal => (
-            <TouchableOpacity
-              key={goal}
-              style={[
-                styles.goalChip,
-                {
-                  backgroundColor:
-                    (config?.daily_goal || 20) === goal
-                      ? COLORS.deepOlive
-                      : COLORS.sageCream,
-                  borderColor:
-                    (config?.daily_goal || 20) === goal
-                      ? COLORS.deepOlive
-                      : COLORS.borderSage,
-                },
-              ]}
-              onPress={() => updateDailyGoal(goal)}
-              activeOpacity={0.7}
-            >
-              <Text
+        {/* Daily goal */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Meta diaria de XP</Text>
+          <View style={styles.goalOptions}>
+            {DAILY_GOAL_OPTIONS.map(goal => (
+              <TouchableOpacity
+                key={goal}
                 style={[
-                  styles.goalChipText,
+                  styles.goalChip,
                   {
-                    color:
+                    backgroundColor:
                       (config?.daily_goal || 20) === goal
-                        ? COLORS.surfaceWhite
-                        : COLORS.textSecondary,
+                        ? COLORS.deepOlive
+                        : COLORS.sageCream,
+                    borderColor:
+                      (config?.daily_goal || 20) === goal
+                        ? COLORS.deepOlive
+                        : COLORS.borderSage,
                   },
                 ]}
+                onPress={() => updateDailyGoal(goal)}
+                activeOpacity={0.7}
               >
-                {goal} XP
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Notifications */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Notificaciones</Text>
-        <View style={styles.settingRow}>
-          <View style={styles.settingInfo}>
-            <Ionicons name="notifications" size={22} color={COLORS.oliveInk} />
-            <Text style={styles.settingLabel}>Recordatorio diario</Text>
+                <Text
+                  style={[
+                    styles.goalChipText,
+                    {
+                      color:
+                        (config?.daily_goal || 20) === goal
+                          ? COLORS.surfaceWhite
+                          : COLORS.textSecondary,
+                    },
+                  ]}
+                >
+                  {goal} XP
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
-          <Switch
-            value={config?.notifications === 1}
-            onValueChange={toggleNotifications}
-            disabled={!notificationsSupported}
-            trackColor={{ false: COLORS.borderSage, true: COLORS.successGreen }}
-            thumbColor={COLORS.surfaceWhite}
-          />
         </View>
 
-        {!notificationsSupported && (
-          <Text style={styles.helperText}>
-            En Expo Go para Android las notificaciones no estan disponibles. Usa un development build para probarlas.
-          </Text>
-        )}
+        {/* Notifications */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Notificaciones</Text>
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Ionicons name="notifications" size={22} color={COLORS.oliveInk} />
+              <Text style={styles.settingLabel}>Recordatorio diario</Text>
+            </View>
+            <Switch
+              value={config?.notifications === 1}
+              onValueChange={toggleNotifications}
+              disabled={!notificationsSupported}
+              trackColor={{ false: COLORS.borderSage, true: COLORS.successGreen }}
+              thumbColor={COLORS.surfaceWhite}
+            />
+          </View>
 
-        {config?.notifications === 1 && notificationsSupported && (
-          <View style={styles.timePicker}>
-            <TouchableOpacity onPress={() => handleNotifHourChange('down')}>
-              <Ionicons name="remove-circle" size={28} color={COLORS.deepOlive} />
-            </TouchableOpacity>
-            <Text style={styles.timeText}>
-              {String(notifHour).padStart(2, '0')}:00
+          {!notificationsSupported && (
+            <Text style={styles.helperText}>
+              En Expo Go para Android las notificaciones no estan disponibles. Usa un development build para probarlas.
             </Text>
-            <TouchableOpacity onPress={() => handleNotifHourChange('up')}>
-              <Ionicons name="add-circle" size={28} color={COLORS.deepOlive} />
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+          )}
 
-      {/* Sound */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Sonido</Text>
-        <View style={styles.settingRow}>
-          <View style={styles.settingInfo}>
-            <Ionicons name="volume-high" size={22} color={COLORS.oliveInk} />
-            <Text style={styles.settingLabel}>Pronunciación automática</Text>
-          </View>
-          <Switch
-            value={config?.auto_speak !== 0}
-            onValueChange={value => toggleSetting('auto_speak', value)}
-            trackColor={{ false: COLORS.borderSage, true: COLORS.successGreen }}
-            thumbColor={COLORS.surfaceWhite}
-          />
+          {config?.notifications === 1 && notificationsSupported && (
+            <View style={styles.timePicker}>
+              <TouchableOpacity onPress={() => handleNotifHourChange('down')}>
+                <Ionicons name="remove-circle" size={28} color={COLORS.deepOlive} />
+              </TouchableOpacity>
+              <Text style={styles.timeText}>
+                {String(notifHour).padStart(2, '0')}:00
+              </Text>
+              <TouchableOpacity onPress={() => handleNotifHourChange('up')}>
+                <Ionicons name="add-circle" size={28} color={COLORS.deepOlive} />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
-        <View style={styles.settingRow}>
-          <View style={styles.settingInfo}>
-            <Ionicons name="musical-notes" size={22} color={COLORS.oliveInk} />
-            <Text style={styles.settingLabel}>Efectos de sonido y vibración</Text>
+
+        {/* Sound */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Sonido</Text>
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Ionicons name="volume-high" size={22} color={COLORS.oliveInk} />
+              <Text style={styles.settingLabel}>Pronunciación automática</Text>
+            </View>
+            <Switch
+              value={config?.auto_speak !== 0}
+              onValueChange={value => toggleSetting('auto_speak', value)}
+              trackColor={{ false: COLORS.borderSage, true: COLORS.successGreen }}
+              thumbColor={COLORS.surfaceWhite}
+            />
           </View>
-          <Switch
-            value={config?.sound_effects !== 0}
-            onValueChange={value => toggleSetting('sound_effects', value)}
-            trackColor={{ false: COLORS.borderSage, true: COLORS.successGreen }}
-            thumbColor={COLORS.surfaceWhite}
-          />
+          <View style={styles.settingRow}>
+            <View style={styles.settingInfo}>
+              <Ionicons name="musical-notes" size={22} color={COLORS.oliveInk} />
+              <Text style={styles.settingLabel}>Efectos de sonido y vibración</Text>
+            </View>
+            <Switch
+              value={config?.sound_effects !== 0}
+              onValueChange={value => toggleSetting('sound_effects', value)}
+              trackColor={{ false: COLORS.borderSage, true: COLORS.successGreen }}
+              thumbColor={COLORS.surfaceWhite}
+            />
+          </View>
         </View>
-      </View>
 
-      {/* Reset */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Datos</Text>
-        <TouchableOpacity style={styles.dangerButton} onPress={handleReset} activeOpacity={0.7}>
-          <Ionicons name="trash-outline" size={20} color={COLORS.dangerOrange} />
-          <Text style={styles.dangerButtonText}>Resetear progreso</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* About */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Acerca de</Text>
-        <View style={styles.aboutCard}>
-          <Text style={styles.aboutApp}>saflash</Text>
-          <Text style={styles.aboutVersion}>Versión 1.0.0</Text>
-          <Text style={styles.aboutDescription}>
-            Aprende inglés desde cero con una ruta guiada A1–C1, ejercicios y repetición espaciada.
-          </Text>
+        {/* Reset */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Datos</Text>
+          <TouchableOpacity style={styles.dangerButton} onPress={handleReset} activeOpacity={0.7}>
+            <Ionicons name="trash-outline" size={20} color={COLORS.dangerOrange} />
+            <Text style={styles.dangerButtonText}>Resetear progreso</Text>
+          </TouchableOpacity>
         </View>
-      </View>
 
-      <View style={{ height: 40 }} />
-    </ScrollView>
+        {/* About */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Acerca de</Text>
+          <View style={styles.aboutCard}>
+            <Text style={styles.aboutApp}>saflash</Text>
+            <Text style={styles.aboutVersion}>Versión 1.0.0</Text>
+            <Text style={styles.aboutDescription}>
+              Aprende inglés desde cero con una ruta guiada A1–C1, ejercicios y repetición espaciada.
+            </Text>
+          </View>
+        </View>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+      <StatusBarScrim />
+    </View>
   );
 }
 

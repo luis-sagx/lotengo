@@ -10,6 +10,7 @@ import ScreenHeader from '../components/ScreenHeader';
 import SearchBar from '../components/SearchBar';
 import { getTotalDueCount, getStudyStats, searchCards } from '../database/progressRepository';
 import { speak } from '../services/audioService';
+import StatusBarScrim from '../components/StatusBarScrim';
 
 const ROW_HEIGHT = 64;
 
@@ -107,6 +108,7 @@ export default function ReviewScreen({ navigation }) {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.content}
       />
+      <StatusBarScrim />
     </View>
   );
 }

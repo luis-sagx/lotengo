@@ -14,6 +14,7 @@ import StatsCard from '../components/StatsCard';
 import AchievementBadge from '../components/AchievementBadge';
 import ProgressBar from '../components/ProgressBar';
 import ScreenHeader from '../components/ScreenHeader';
+import StatusBarScrim from '../components/StatusBarScrim';
 
 const { width } = Dimensions.get('window');
 
@@ -52,120 +53,123 @@ export default function ProgressScreen() {
   const knownPct = Math.round((study.knownCount / distributionTotal) * 100);
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <ScreenHeader
-        title="Progreso"
-        trailing={<Text style={styles.streakText}>🔥 {formatStreak(streak)}{streak > 0 ? ' de racha' : ''}</Text>}
-      />
+    <View style={styles.container}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <ScreenHeader
+          title="Progreso"
+          trailing={<Text style={styles.streakText}>🔥 {formatStreak(streak)}{streak > 0 ? ' de racha' : ''}</Text>}
+        />
 
-      {/* Stats row */}
-      <View style={styles.statsRow}>
-        <StatsCard icon="flash" value={formatNumber(xpTotal)} label="XP total" color={COLORS.accentOrange} />
-        <StatsCard icon="checkmark-done" value={formatNumber(study.knownCount)} label="Dominadas" color={COLORS.successGreen} />
-        <StatsCard icon="flame" value={`${streak}`} label="Días" color={COLORS.amberGold} />
-      </View>
-
-      {/* Word progress */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Tarjetas estudiadas</Text>
-        <View style={styles.progressCard}>
-          <View style={styles.progressRow}>
-            <Text style={styles.progressLabel}>Estudiadas</Text>
-            <Text style={styles.progressValue}>
-              {formatProgress(studiedCards, totalCards)} ({studiedCards}/{totalCards})
-            </Text>
-          </View>
-          <ProgressBar
-            current={studiedCards}
-            total={totalCards}
-            color={COLORS.deepOlive}
-            backgroundColor={COLORS.sageCream}
-            showLabel={false}
-          />
-          <View style={[styles.progressRow, { marginTop: SPACING.sm, marginBottom: 0 }]}>
-            <Text style={styles.progressLabel}>Dominadas (conocidas)</Text>
-            <Text style={styles.progressValue}>{study.knownCount}</Text>
-          </View>
+        {/* Stats row */}
+        <View style={styles.statsRow}>
+          <StatsCard icon="flash" value={formatNumber(xpTotal)} label="XP total" color={COLORS.accentOrange} />
+          <StatsCard icon="checkmark-done" value={formatNumber(study.knownCount)} label="Dominadas" color={COLORS.successGreen} />
+          <StatsCard icon="flame" value={`${streak}`} label="Días" color={COLORS.goldText} />
         </View>
-      </View>
 
-      {/* Distribution */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Distribución de tarjetas</Text>
-        <View style={styles.distributionCard}>
-          <View style={styles.distRow}>
-            <View style={styles.distItem}>
-              <View style={[styles.distDot, { backgroundColor: COLORS.textPlaceholder }]} />
-              <Text style={styles.distLabel}>Nuevas</Text>
-              <Text style={styles.distValue}>{newCount} ({newPct}%)</Text>
+        {/* Word progress */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tarjetas estudiadas</Text>
+          <View style={styles.progressCard}>
+            <View style={styles.progressRow}>
+              <Text style={styles.progressLabel}>Estudiadas</Text>
+              <Text style={styles.progressValue}>
+                {formatProgress(studiedCards, totalCards)} ({studiedCards}/{totalCards})
+              </Text>
             </View>
-            <View style={styles.distItem}>
-              <View style={[styles.distDot, { backgroundColor: COLORS.dangerOrange }]} />
-              <Text style={styles.distLabel}>Aprendiendo</Text>
-              <Text style={styles.distValue}>{study.learningCount} ({learningPct}%)</Text>
-            </View>
-          </View>
-          <View style={styles.distRow}>
-            <View style={styles.distItem}>
-              <View style={[styles.distDot, { backgroundColor: COLORS.amberGold }]} />
-              <Text style={styles.distLabel}>Repasando</Text>
-              <Text style={styles.distValue}>{study.reviewingCount} ({reviewingPct}%)</Text>
-            </View>
-            <View style={styles.distItem}>
-              <View style={[styles.distDot, { backgroundColor: COLORS.successGreen }]} />
-              <Text style={styles.distLabel}>Conocidas</Text>
-              <Text style={styles.distValue}>{study.knownCount} ({knownPct}%)</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-
-      {/* Achievements */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Logros</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.achievementsScroll}>
-          {achievements.map(a => (
-            <AchievementBadge
-              key={a.id}
-              id={a.id}
-              icon={a.icon}
-              title={a.title}
-              unlocked={a.unlocked}
+            <ProgressBar
+              current={studiedCards}
+              total={totalCards}
+              color={COLORS.deepOlive}
+              backgroundColor={COLORS.sageCream}
+              showLabel={false}
             />
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Session history */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Historial de sesiones</Text>
-        {sessions.length === 0 ? (
-          <View style={styles.emptyHistory}>
-            <Ionicons name="time-outline" size={32} color={COLORS.textPlaceholder} />
-            <Text style={styles.emptyHistoryText}>Todavía no completaste ninguna sesión.</Text>
+            <View style={[styles.progressRow, { marginTop: SPACING.sm, marginBottom: 0 }]}>
+              <Text style={styles.progressLabel}>Dominadas (conocidas)</Text>
+              <Text style={styles.progressValue}>{study.knownCount}</Text>
+            </View>
           </View>
-        ) : (
-          sessions.map(session => (
-            <View key={session.id} style={styles.sessionRow}>
-              <View style={styles.sessionInfo}>
-                <Text style={styles.sessionDate}>{formatRelative(session.session_date)}</Text>
-                <Text style={styles.sessionType}>
-                  {session.session_type === 'word' ? '📚 Palabras' : '💬 Frases'}
-                </Text>
+        </View>
+
+        {/* Distribution */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Distribución de tarjetas</Text>
+          <View style={styles.distributionCard}>
+            <View style={styles.distRow}>
+              <View style={styles.distItem}>
+                <View style={[styles.distDot, { backgroundColor: COLORS.textPlaceholder }]} />
+                <Text style={styles.distLabel}>Nuevas</Text>
+                <Text style={styles.distValue}>{newCount} ({newPct}%)</Text>
               </View>
-              <View style={styles.sessionStats}>
-                <Text style={styles.sessionCards}>{session.cards_studied} tarjetas</Text>
-                <Text style={styles.sessionDuration}>
-                  {Math.floor(session.duration_secs / 60)}m
-                </Text>
+              <View style={styles.distItem}>
+                <View style={[styles.distDot, { backgroundColor: COLORS.dangerOrange }]} />
+                <Text style={styles.distLabel}>Aprendiendo</Text>
+                <Text style={styles.distValue}>{study.learningCount} ({learningPct}%)</Text>
               </View>
             </View>
-          ))
-        )}
-      </View>
+            <View style={styles.distRow}>
+              <View style={styles.distItem}>
+                <View style={[styles.distDot, { backgroundColor: COLORS.amberGold }]} />
+                <Text style={styles.distLabel}>Repasando</Text>
+                <Text style={styles.distValue}>{study.reviewingCount} ({reviewingPct}%)</Text>
+              </View>
+              <View style={styles.distItem}>
+                <View style={[styles.distDot, { backgroundColor: COLORS.successGreen }]} />
+                <Text style={styles.distLabel}>Conocidas</Text>
+                <Text style={styles.distValue}>{study.knownCount} ({knownPct}%)</Text>
+              </View>
+            </View>
+          </View>
+        </View>
 
-      <View style={{ height: 40 }} />
-    </ScrollView>
+        {/* Achievements */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Logros</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.achievementsScroll}>
+            {achievements.map(a => (
+              <AchievementBadge
+                key={a.id}
+                id={a.id}
+                icon={a.icon}
+                title={a.title}
+                unlocked={a.unlocked}
+              />
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Session history */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Historial de sesiones</Text>
+          {sessions.length === 0 ? (
+            <View style={styles.emptyHistory}>
+              <Ionicons name="time-outline" size={32} color={COLORS.textPlaceholder} />
+              <Text style={styles.emptyHistoryText}>Todavía no completaste ninguna sesión.</Text>
+            </View>
+          ) : (
+            sessions.map(session => (
+              <View key={session.id} style={styles.sessionRow}>
+                <View style={styles.sessionInfo}>
+                  <Text style={styles.sessionDate}>{formatRelative(session.session_date)}</Text>
+                  <Text style={styles.sessionType}>
+                    {session.session_type === 'word' ? '📚 Palabras' : '💬 Frases'}
+                  </Text>
+                </View>
+                <View style={styles.sessionStats}>
+                  <Text style={styles.sessionCards}>{session.cards_studied} tarjetas</Text>
+                  <Text style={styles.sessionDuration}>
+                    {Math.floor(session.duration_secs / 60)}m
+                  </Text>
+                </View>
+              </View>
+            ))
+          )}
+        </View>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+      <StatusBarScrim />
+    </View>
   );
 }
 
@@ -177,7 +181,7 @@ const styles = StyleSheet.create({
   streakText: {
     fontFamily: FONT_FAMILY.semiBold,
     fontSize: 15,
-    color: COLORS.amberGold,
+    color: COLORS.goldText,
   },
   statsRow: {
     flexDirection: 'row',
