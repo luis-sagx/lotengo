@@ -4,12 +4,13 @@
     "slug": "saflash",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/placeholder.png",
+    "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "light",
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/placeholder.png",
-        "backgroundColor": "#1e1f23"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "monochromeImage": "./assets/images/monochrome-icon.png",
+        "backgroundColor": "#FDF2E2"
       },
       "package": "com.saflash.app",
       "permissions": [
@@ -20,7 +21,13 @@
     },
     "plugins": [
       "expo-font",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#F2600C"
+        }
+      ],
       [
         "expo-sqlite",
         {
@@ -31,9 +38,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/placeholder.png",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 160,
           "resizeMode": "contain",
-          "backgroundColor": "#1e1f23"
+          "backgroundColor": "#FDF2E2"
         }
       ],
       [
