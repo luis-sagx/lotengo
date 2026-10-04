@@ -49,7 +49,7 @@ export default function StudyLessonScreen({ navigation, route }) {
     if (current) await setCurrentLesson(current.id);
     setStoreLevel(suggestion.level);
     setSuggestion(null);
-    navigation.navigate('Path');
+    navigation.goBack();
   };
 
   const dismissSuggestion = async () => {
@@ -86,8 +86,8 @@ export default function StudyLessonScreen({ navigation, route }) {
           medium={session.stats.medium}
           hard={session.stats.hard}
           durationSecs={session.completed.durationSecs}
-          onContinue={() => navigation.navigate('Path')}
-          onViewProgress={() => navigation.navigate('Path')}
+          onContinue={() => navigation.goBack()}
+          onViewProgress={() => navigation.goBack()}
         />
         <View style={styles.suggestionOverlay}>
           <LevelSuggestionCard

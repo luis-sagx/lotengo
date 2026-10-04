@@ -29,31 +29,6 @@ export async function upsertProgress(cardType, cardId, progress) {
   );
 }
 
-export async function toggleFavorite(cardType, cardId) {
-  const db = getDatabase();
-  const existing = await getProgress(cardType, cardId);
-  const newValue = existing ? (existing.is_favorite ? 0 : 1) : 1;
-
-  if (existing) {
-    await db.runAsync(
-      'UPDATE user_progress SET is_favorite = ? WHERE card_type = ? AND card_id = ?',
-      [newValue, cardType, cardId]
-    );
-  } else {
-    await db.runAsync(
-      `INSERT INTO user_progress (card_type, card_id, is_favorite)
-       VALUES (?, ?, ?)`,
-      [cardType, cardId, newValue]
-    );
-  }
-  return newValue;
-}
-
-export async function isFavorite(cardType, cardId) {
-  const progress = await getProgress(cardType, cardId);
-  return progress ? progress.is_favorite === 1 : false;
-}
-
 export async function getStudyStats() {
   const db = getDatabase();
   const stats = await db.getFirstAsync(`
@@ -86,25 +61,43 @@ export async function getTodayStats() {
   return result.today_cards || 0;
 }
 
-export async function getDueCount(cardType) {
+export async function getTotalDueCount() {
   const db = getDatabase();
   const result = await db.getFirstAsync(
     `SELECT COUNT(*) as count FROM user_progress
-     WHERE card_type = ? AND next_review <= date('now') AND status != 'known'`,
-    [cardType]
+     WHERE next_review <= date('now') AND status NOT IN ('new', 'known')`
   );
   return result.count || 0;
 }
 
-export async function getNewCount(cardType) {
+// Dictionary: words and phrases matching `query` in either language, or the
+// most recently studied cards when the query is empty.
+export async function searchCards(query, limit = 50) {
   const db = getDatabase();
-  const table = cardType === 'word' ? 'words' : 'phrases';
-  const result = await db.getFirstAsync(
-    `SELECT COUNT(*) as count
-     FROM ${table} w
-     LEFT JOIN user_progress up ON up.card_id = w.id AND up.card_type = ?
-     WHERE up.card_id IS NULL`,
-    [cardType]
+  const term = query.trim();
+  if (!term) {
+    return db.getAllAsync(
+      `SELECT up.card_type, up.card_id AS id, up.status,
+              COALESCE(w.english_word, p.phrase_en) AS en,
+              COALESCE(w.spanish_trans, p.phrase_es) AS es
+       FROM user_progress up
+       LEFT JOIN words w ON up.card_type = 'word' AND w.id = up.card_id
+       LEFT JOIN phrases p ON up.card_type = 'phrase' AND p.id = up.card_id
+       WHERE up.last_review IS NOT NULL
+       ORDER BY up.last_review DESC
+       LIMIT ?`,
+      [limit]
+    );
+  }
+  const like = `%${term}%`;
+  return db.getAllAsync(
+    `SELECT * FROM (
+       SELECT 'word' AS card_type, id, english_word AS en, spanish_trans AS es, frequency_rank AS rank
+       FROM words WHERE english_word LIKE ? OR spanish_trans LIKE ?
+       UNION ALL
+       SELECT 'phrase', id, phrase_en, phrase_es, 100000 + id
+       FROM phrases WHERE phrase_en LIKE ? OR phrase_es LIKE ?
+     ) ORDER BY rank LIMIT ?`,
+    [like, like, like, like, limit]
   );
-  return result.count || 0;
 }

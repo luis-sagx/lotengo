@@ -4,18 +4,16 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../theme/colors';
 import { FONT_FAMILY } from '../theme/typography';
-import PathNavigator from './PathNavigator';
-import WordsNavigator from './WordsNavigator';
-import PhrasesNavigator from './PhrasesNavigator';
+import PathScreen from '../screens/PathScreen';
+import ReviewScreen from '../screens/ReviewScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator();
 
 const TAB_ICONS = {
-  Home: { focused: 'home', unfocused: 'home-outline' },
-  WordsNavigator: { focused: 'book', unfocused: 'book-outline' },
-  PhrasesNavigator: { focused: 'chatbubbles', unfocused: 'chatbubbles-outline' },
+  Home: { focused: 'map', unfocused: 'map-outline' },
+  Review: { focused: 'albums', unfocused: 'albums-outline' },
   Progress: { focused: 'bar-chart', unfocused: 'bar-chart-outline' },
   Settings: { focused: 'settings', unfocused: 'settings-outline' },
 };
@@ -48,18 +46,13 @@ export default function MainTabNavigator() {
     >
       <Tab.Screen
         name="Home"
-        component={PathNavigator}
-        options={{ tabBarLabel: 'Inicio' }}
+        component={PathScreen}
+        options={{ tabBarLabel: 'Ruta' }}
       />
       <Tab.Screen
-        name="WordsNavigator"
-        component={WordsNavigator}
-        options={{ tabBarLabel: 'Palabras' }}
-      />
-      <Tab.Screen
-        name="PhrasesNavigator"
-        component={PhrasesNavigator}
-        options={{ tabBarLabel: 'Frases' }}
+        name="Review"
+        component={ReviewScreen}
+        options={{ tabBarLabel: 'Repaso' }}
       />
       <Tab.Screen
         name="Progress"
