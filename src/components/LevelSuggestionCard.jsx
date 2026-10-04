@@ -9,13 +9,12 @@ import { LEVEL_LABELS } from '../utils/constants';
 export default function LevelSuggestionCard({ suggestion, onAccept, onDismiss }) {
   if (!suggestion) return null;
   const copy = suggestion.direction === 'up'
-    ? `¿Te resulta muy fácil? Podés saltar a ${suggestion.level}.`
-    : `¿Muy difícil? Probá con ${suggestion.level}.`;
+    ? `¿Te resulta muy fácil? Podés saltar a ${LEVEL_LABELS[suggestion.level]}.`
+    : `¿Muy difícil? Probá con ${LEVEL_LABELS[suggestion.level]}.`;
 
   return (
     <View style={styles.card}>
       <Text style={styles.title}>{copy}</Text>
-      <Text style={styles.subtitle}>{LEVEL_LABELS[suggestion.level]}</Text>
       <View style={styles.actions}>
         <TouchableOpacity style={styles.secondary} onPress={onDismiss}>
           <Text style={styles.secondaryText}>Ahora no</Text>
@@ -42,12 +41,6 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY.semiBold,
     fontSize: 15,
     color: COLORS.deepOlive,
-  },
-  subtitle: {
-    fontFamily: FONT_FAMILY.regular,
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    marginTop: SPACING.xs,
   },
   actions: {
     flexDirection: 'row',
